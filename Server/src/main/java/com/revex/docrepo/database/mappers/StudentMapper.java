@@ -19,6 +19,7 @@ public class StudentMapper implements RowMapper<Student> {
 				.semesterType(SemesterType.getByNumber(rs.getInt("sem")))
 				.beginYear(rs.getInt("rik1"))
 				.endYear(rs.getInt("rik2"))
+				.courseNumber(rs.getInt("courseNumber"))
 				.group(GroupView.builder()
 						.id(rs.getLong("groupId"))
 						.groupName(rs.getString("groupName"))

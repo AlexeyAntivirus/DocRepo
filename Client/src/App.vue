@@ -1,14 +1,14 @@
 <template>
-<div>			
-	<el-container>
-		<el-aside width="300px">
-			<app-menu/>
-		</el-aside>
-		<el-main style="height: 100vh">
-			<router-view/>
-		</el-main>
-	</el-container>
-</div>
+	<div>
+		<el-container>
+			<el-aside width="300px">
+				<app-menu/>
+			</el-aside>
+			<el-main style="height: 100vh">
+				<router-view/>
+			</el-main>
+		</el-container>
+	</div>
 </template>
 
 <script lang="ts">

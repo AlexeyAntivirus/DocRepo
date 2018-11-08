@@ -14,4 +14,5 @@ public class Student {
     private int endYear;
     private SemesterType semesterType;
     private GroupView group;
+    private int courseNumber;
 }

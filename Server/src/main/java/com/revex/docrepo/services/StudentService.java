@@ -8,9 +8,13 @@ import com.revex.docrepo.exchange.student.FindStudentViewsByFullNameAndGroupRequ
 import com.revex.docrepo.exchange.student.FindStudentViewsByFullNameAndGroupResponsePayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByParamRequestParameterRequestPayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByParamRequestParameterResponsePayload;
+import com.revex.docrepo.exchange.student.FindStudentsByFullNameAndGroupRequestPayload;
+import com.revex.docrepo.exchange.student.FindStudentsByFullNameAndGroupResponsePayload;
 import com.revex.docrepo.exchange.student.GetAllStudentsResponsePayload;
 import com.revex.docrepo.exchange.student.InsertNewStudentRequestPayload;
 import com.revex.docrepo.exchange.student.InsertNewStudentResponsePayload;
+import com.revex.docrepo.exchange.student.UpdateStudentByIdRequestPayload;
+import com.revex.docrepo.exchange.student.UpdateStudentByIdResponsePayload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -101,6 +105,57 @@ public class StudentService {
 				viewMapper);
 		return FindStudentViewsByFullNameAndGroupResponsePayload.builder()
 				.students(query)
+				.build();
+	}
+
+	public FindStudentsByFullNameAndGroupResponsePayload findStudentsByFullNameAndGroup(
+			FindStudentsByFullNameAndGroupRequestPayload payload) {
+		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource()
+				.addValue("groupId", payload.getGroup().getId())
+				.addValue("semesterNumber", payload.getSemesterType().getNumber())
+				.addValue("beginYear", payload.getBeginYear())
+				.addValue("endYear", payload.getEndYear());
+		List<Student> query = template.query("SELECT" +
+						" stud.id," +
+						" stud.pib," +
+						" sg.rik1," +
+						" sg.rik2," +
+						" sg.sem," +
+						" groups.id as groupId," +
+						" groups.nazva as groupName," +
+						" groups.kurs as courseNumber " +
+						" FROM sg" +
+						" JOIN groups ON groups.id = sg.idgroup" +
+						" JOIN stud on sg.idstud = stud.id "  +
+						"WHERE sg.idgroup = :groupId AND sg.sem = (:semesterNumber + 1) % 2 + 1 AND sg.rik1 = :beginYear AND sg.rik2 = :endYear;",
+				mapSqlParameterSource,
+				mapper);
+		return FindStudentsByFullNameAndGroupResponsePayload.builder()
+				.students(query)
+				.build();
+	}
+
+	public UpdateStudentByIdResponsePayload updateStudentById(UpdateStudentByIdRequestPayload payload) {
+		MapSqlParameterSource studentSqlParameterSource = new MapSqlParameterSource()
+				.addValue("id", payload.getId())
+				.addValue("fullName", payload.getFullName());
+
+		MapSqlParameterSource sgSqlParameterSource = new MapSqlParameterSource()
+				.addValue("id", payload.getId())
+				.addValue("beginYear", payload.getBeginYear())
+				.addValue("endYear", payload.getEndYear())
+				.addValue("semesterType", payload.getSemesterType().getNumber())
+				.addValue("groupId", payload.getGroup().getId());
+		template.update("UPDATE stud SET pib = :fullName WHERE id = :id", studentSqlParameterSource);
+
+		int update = template.update("UPDATE sg SET rik1 = :beginYear, " +
+				"rik2 = :endYear, " +
+				"sem = :semesterType, " +
+				"idgroup = :groupId " +
+				"WHERE idstud = :id;", sgSqlParameterSource);
+
+		return UpdateStudentByIdResponsePayload.builder()
+				.isSuccessful(update > 0)
 				.build();
 	}
 }

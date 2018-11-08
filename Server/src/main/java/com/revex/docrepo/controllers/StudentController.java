@@ -4,9 +4,13 @@ import com.revex.docrepo.exchange.student.FindStudentViewsByFullNameAndGroupRequ
 import com.revex.docrepo.exchange.student.FindStudentViewsByFullNameAndGroupResponsePayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByParamRequestParameterRequestPayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByParamRequestParameterResponsePayload;
+import com.revex.docrepo.exchange.student.FindStudentsByFullNameAndGroupRequestPayload;
+import com.revex.docrepo.exchange.student.FindStudentsByFullNameAndGroupResponsePayload;
 import com.revex.docrepo.exchange.student.GetAllStudentsResponsePayload;
 import com.revex.docrepo.exchange.student.InsertNewStudentRequestPayload;
 import com.revex.docrepo.exchange.student.InsertNewStudentResponsePayload;
+import com.revex.docrepo.exchange.student.UpdateStudentByIdRequestPayload;
+import com.revex.docrepo.exchange.student.UpdateStudentByIdResponsePayload;
 import com.revex.docrepo.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -48,5 +52,16 @@ public class StudentController {
 		return this.service.findStudentViewsByFullNameAndGroup(payload);
 	}
 
+	@ResponseBody
+	@PostMapping("/find-students-by-fullname-and-group")
+	public FindStudentsByFullNameAndGroupResponsePayload findStudentsByFullNameAndGroup(
+			@RequestBody FindStudentsByFullNameAndGroupRequestPayload payload) {
+		return this.service.findStudentsByFullNameAndGroup(payload);
+	}
 
+	@ResponseBody
+	@PostMapping("/update")
+	public UpdateStudentByIdResponsePayload updateStudentById(@RequestBody UpdateStudentByIdRequestPayload payload) {
+		return this.service.updateStudentById(payload);
+	}
 }
