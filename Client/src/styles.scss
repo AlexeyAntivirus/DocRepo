@@ -1,12 +1,37 @@
-/* theme color */
-$--color-primary: teal;
 
 /* icon font path, required */
 $--font-path: '~element-ui/lib/theme-chalk/fonts';
 
+$--background-color-base: darken(#f5f7fa, 3%);
+
+$--color-primary: #474787;
+$--color-success: #218c74;
+$--color-warning: #ffb142;
+$--color-danger:  #ff5252;
+$--color-info:    #34ace0;
+
+$--border-color-base: #dcdfe6;
+$--border-color-light: #dcdfe6;
+$--border-color-lighter: #dcdfe6;
+$--border-color-extra-light: #dcdfe6;
+
+* {
+	font-family: Roboto, sans-serif;
+	font-size: 14px;
+	font-weight: 400;
+}
+
 body, html {
 	padding: 0;
 	margin: 0;
+	background-color: $--background-color-base;
+}
+
+.el-menu-item.is-active {
+	border-left: 4px solid $--color-warning;
+	padding-left: 16px !important;
+	background-color: darken($--color-primary, 10%) !important;
 }
 
 @import "~element-ui/packages/theme-chalk/src/index";
+

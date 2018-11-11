@@ -1,63 +1,83 @@
 import isEqual from "lodash.isequal"
 
 export interface QualificationWorkFormData {
-	id: number,
-	title: string,
-	beginYear: number,
-	endYear: number,
-	semesterNumber: number,
-	discipline: DisciplineView | null,
-	// disciplineName: string,
-	group: GroupView | null,
-	groupName: string,
-	student: StudentView | null,
-	workType: string,
-	studentFullName: string,
-	faculty: string,
-	specialty: string,
-	branch: string,
-	educationLevel: string,
-	educationProgram: string,
-	gradeECTS: string,
-	gradeNational: string,
-	grade: number,
-	courseNumber: number,
-	teachers: number[],
-	teacherNames: string,
-	extramural: boolean,
+	id: number
+	title: string
+	beginYear: number
+	endYear: number
+	semesterNumber: number
+	discipline: DisciplineView | null
+	group: GroupView | null
+	groupName: string
+	student: StudentView | null
+	workType: string
+	studentFullName: string
+	faculty: string
+	specialty: string
+	branch: string
+	educationLevel: string
+	educationProgram: string
+	gradeECTS: string
+	gradeNational: string
+	grade: number
+	courseNumber: number
+	teachers: number[]
+	teacherNames: string
+	extramural: boolean
 	shortened: boolean
 }
 
 export interface Student {
-	id: number,
-	fullName: string,
-	semesterType: string,
-	group: GroupView,
-	beginYear: number,
-	endYear: number,
-	courseNumber: number,
-	extramural: boolean,
+	id: number
+	fullName: string
+	semesterType: string
+	group: GroupView
+	beginYear: number
+	endYear: number
+	courseNumber: number
+	extramural: boolean
 	shortened: boolean
 }
 
+export interface Group {
+    id: number
+    name: string
+    courseNumber: number
+    faculty: string
+    specialty: string
+    branch: string
+    educationLevel: string
+    educationProgram: string
+    beginYear: number
+    endYear: number
+    semesterType: string
+    extramural: boolean
+    shortened: boolean
+}
+
 export interface GroupView {
-	id: number,
+	id: number
 	groupName: string
 }
 
 export interface StudentView {
-	id: number,
+	id: number
 	fullName: string
 }
 
 export interface DisciplineView {
-	id: number,
+	id: number
 	shortName: string
 }
 
 export interface TeacherView {
-	id: number,
+	id: number
 	fullName: string
+}
+
+export interface AcademicYearView {
+	beginYear: number
+	endYear: number
 }
 
 export function validateRequired(val: any) {

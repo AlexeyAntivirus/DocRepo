@@ -1,28 +1,28 @@
 <template>
 	<el-container>
-		<el-col :span="16">
+		<el-col :span="visible ? 16 : 24">
 			<el-card shadow="never">
-				<el-form :model="value">
-					<el-form-item size="small" label="Тип роботи: " prop="workType">
+				<el-form class="form" style="margin-bottom: 20px">
+					<el-form-item size="mini" label="Семестр: " prop="workType">
 						<el-radio-group v-model="value.semesterType" @change="reset">
 							<el-radio label="Весняний">Весняний</el-radio>
 							<el-radio label="Осінній">Осінній</el-radio>
 						</el-radio-group>
 					</el-form-item>
-					<el-form-item size="small" prop="extramural" label="Заочний">
+					<el-form-item size="mini" prop="extramural" label="Заочний: ">
 						<el-checkbox v-model="value.extramural"></el-checkbox>
 					</el-form-item>
-					<el-form-item size="small" prop="shortened" label="Скорочений">
+					<el-form-item size="mini" prop="shortened" label="Скорочений: ">
 						<el-checkbox v-model="value.shortened"></el-checkbox>
 					</el-form-item>
-					<el-form-item size="small" label="Навчальний рік: ">
+					<el-form-item size="mini" label="Навчальний рік: " style="width: 50%">
 						<el-col :span="8">
 							<el-form-item prop="beginYear">
 								<el-input-number size="mini" v-model="value.beginYear" style="width: 100%;"
 								                 @change="onBeginYearChanged" :min="1930" :max="2070"/>
 							</el-form-item>
 						</el-col>
-						<el-col class="line" :span="2">-</el-col>
+						<el-col class="line" :span="1">-</el-col>
 						<el-col :span="8">
 							<el-form-item prop="endYear">
 								<el-input-number size="mini" v-model="value.endYear" style="width: 100%;"
@@ -30,13 +30,13 @@
 							</el-form-item>
 						</el-col>
 					</el-form-item>
-					<el-form-item size="small" prop="courseNumber" label="Курс: ">
+					<el-form-item size="mini" prop="courseNumber" label="Курс: ">
 						<el-input-number placeholder="Pick a time" size="small"
 						                 v-model="value.courseNumber"
 						                 :min="1" :max="6"
 						                 @change="onCourseNumberChanged"/>
 					</el-form-item>
-					<el-form-item size="small" prop="group" label="Група: ">
+					<el-form-item size="mini" prop="group" label="Група: " style="width: 50%">
 						<el-select size="small" v-model="value.group"
 						           remote filterable
 						           :loading="isLoading"
@@ -48,21 +48,17 @@
 							           :value="group" :label="group.groupName"/>
 						</el-select>
 					</el-form-item>
-					<el-form-item size="small" prop="fullName" label="ПІБ: ">
-						<el-input size="small" v-model="value.fullName"/>
-					</el-form-item>
 					<el-form-item>
-						<el-button v-if="value.id === 0" type="primary" @click.native.stop.prevent="insert">Додати студента</el-button>
-						<el-button v-if="value.id !== 0" type="primary" @click.native.stop.prevent="update">Відновити студента</el-button>
-						<el-button v-if="value.id !== 0" type="primary" @click.native.stop.prevent="cancel">Відмінити</el-button>
-						<el-button @click.native.prevent.stop="loadData">Отримати дані</el-button>
+						<el-button type="primary" @click.native.prevent.stop="loadData">Отримати дані</el-button>
+						<el-button type="success" @click="$router.push({name: 'InsertStudentForm'})">
+							<el-icon name="plus"></el-icon>
+							<span>Додати студента</span>
+						</el-button>
 					</el-form-item>
 				</el-form>
-			</el-card>
-			<el-card shadow="never">
-				<el-table :data="tableData" border style="width: 100%">
-					<el-table-column prop="fullName" label="ПІБ" width="220"/>
-					<el-table-column prop="group.groupName" label="Група"/>
+				<el-table :data="tableData" border style="width: 100%" height="55vh">
+					<el-table-column prop="fullName" label="ПІБ"/>
+					<el-table-column prop="group.groupName" label="Група" width="320"/>
 					<el-table-column prop="beginYear" label="Початок року" width="120"/>
 					<el-table-column prop="endYear" label="Кінець року" width="120"/>
 					<el-table-column prop="semesterType" label="Семестр" width="120"/>
@@ -77,26 +73,52 @@
 				</el-table>
 			</el-card>
 		</el-col>
+		<el-col v-if="visible" :span="visible ? 8 : 0" style="height: 90vh;">
+			<students-form
+					ref="studentsForm"
+					v-model="selectedStudent"
+					:is-update="true"
+					:cancel="() => {visible = false}"
+					:submit="update"
+					:is-submitting="isUpdating"
+					:submit-button-text="'Відновити'"/>
+		</el-col>
 	</el-container>
 </template>
 
-<script lang="tsx">
+<script lang="ts">
 	import Vue from "vue"
-	import { Component, Prop, Watch } from "vue-property-decorator"
-	import {DisciplineView, GroupView, QualificationWorkFormData, StudentView, TeacherView, 
-		validateArrayRequired, validateObjectRequired, validateRequired, validateString} from "../entities/entities"
-	import { Student } from "@/entities/entities"
+	import {Component} from "vue-property-decorator"
+	import {
+		GroupView,
+		validateObjectRequired,
+		validateString
+	} from "../../entities/entities"
+	import {Student} from "../../entities/entities"
+	import StudentsForm from "./StudentsForm.vue"
+
+	interface Model {
+		beginYear: number
+		endYear: number
+		semesterType: string,
+		group: GroupView
+		courseNumber: number
+		extramural: boolean
+		shortened: boolean
+	}
 
 	@Component({
-		name: "StudentsForm"
+		name: "StudentsTable",
+		components: {StudentsForm}
 	})
-	export default class StudentsForm extends Vue {
-		
-		private isLoading: boolean = false
+	export default class StudentsTable extends Vue {
+		private tableData: Student[] = []
 
-		private value: Student = {
-			id: 0,
-			fullName: "",
+		private visible: boolean = false
+		private isLoading: boolean = false
+		private isUpdating: boolean = false
+
+		private value: Model = {
 			beginYear: 2018,
 			endYear: 2019,
 			semesterType: "Весняний",
@@ -109,9 +131,14 @@
 			shortened: false
 		}
 
-		private tableData: Student[] = []
-
 		private groupSuggestions: GroupView[] = []
+
+		private selectedStudent: Student | null = null
+
+		private select(element: Student) {
+			this.selectedStudent = JSON.parse(JSON.stringify(element))
+			this.visible = true
+		}
 
 		private onBeginYearChanged(val: number) {
 			this.value.endYear = val + 1
@@ -159,69 +186,6 @@
 			})
 		}
 
-		private send() {
-			const errors = this.validate()
-
-			if (errors.length > 0) {
-				this.$msgbox({
-					message: <span style="white-space: pre-line;">
-						{ errors }
-					</span>,
-					type: "error",
-					confirmButtonText: "OK",
-					title: "Помилка"
-				})
-
-				return
-			}
-
-			if (this.value.id === 0) {
-				this.insert()
-			} else {
-				this.update()
-			}
-		}
-
-		private update() {
-			this.axios.post("/student/update", this.value).then((resp) => {
-				if (resp.data.successful) {
-					this.$alert("Студент успішно додан", "Успіх", {type: "success"})
-				} else {
-					this.$alert("З'явилася якась помилка", "Помилка", {type: "error"})
-				}
-			})
-		}
-
-		private insert() {
-			this.axios.put("/student/insert", this.value).then((resp) => {
-				if (resp.data.successful) {
-					this.$alert("Студент успішно додан", "Успіх", {
-						type: "success",
-						confirmButtonText: "OK"
-					})
-				} else {
-					this.$alert("З'явилася якась помилка", "Помилка", {
-						type: "error",
-						confirmButtonText: "OK",
-					})
-				}
-			})
-		}
-
-		private validate(): string {
-			let errors = ""
-			
-			if (validateObjectRequired(this.value.group, {id: 0, groupName: ""}) !== "fine") {
-				errors += "Ви не вибрали групу\n"
-			}
-
-			if (validateString(this.value.fullName) !== "fine") {
-				errors += "Ви не ввели ПІБ студента\n"
-			}
-
-			return errors
-		}
-
 		private loadData() {
 			this.isLoading = true
 			this.axios.post("/student/find-students-by-fullname-and-group", {
@@ -230,43 +194,36 @@
 				endYear: this.value.endYear,
 				semesterType: this.value.semesterType
 			})
-			.then((result) => {
-				this.isLoading = false
-				this.tableData = result.data.students
-			})
-			.catch((reason) => {
-				this.$alert(reason.reason, "Помилка", {
-					type: "error",
-					confirmButtonText: "OK",
+				.then((result) => {
+					this.isLoading = false
+					this.tableData = result.data.students
 				})
+				.catch((reason) => {
+					this.$alert(reason.reason, "Помилка", {
+						type: "error",
+						confirmButtonText: "OK",
+					})
+				})
+		}
+
+		private update() {
+			this.axios.post("/student/update", this.selectedStudent).then((resp) => {
+				if (resp.data.successful) {
+					this.$alert("Студент успішно додан", "Успіх", {type: "success", confirmButtonText: "OK"})
+				} else {
+					this.$alert("З'явилася якась помилка", "Помилка", {type: "error", confirmButtonText: "OK"})
+				}
 			})
 		}
 
-		private select(element: Student) {
-			this.value = JSON.parse(JSON.stringify(element))
-		}
-
-		private cancel() {
-			this.value.id = 0
-			this.value = {
-				id: 0,
-				fullName: "",
-				beginYear: 2018,
-				endYear: 2019,
-				semesterType: "Весняний",
-				group: {
-					id: 0,
-					groupName: ""
-				},
-				courseNumber: 1,
-				extramural: false,
-				shortened: false
-			}
-		}
 	}
 </script>
 
 <style scoped lang="scss">
+	.form > .el-form-item {
+		margin-bottom: 4px;
+	}
+
 	.line {
 		text-align: center;
 	}

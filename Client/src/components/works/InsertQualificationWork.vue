@@ -1,6 +1,6 @@
 <template>
 	<el-container style="height: 100%">
-		<el-col :span="16">
+		<el-col :span="16" :offset="4" style="height: 90vh; overflow-y: scroll;">
 			<qualification-work-form v-model="newWork" 
 					:submit-button-name="'Додати'"
 					:cancel="cancel"
@@ -15,7 +15,7 @@
 	import QualificationWorkForm from "./QualificationWorkForm.vue"
 	import Vue from "vue"
 	import { Component } from "vue-property-decorator"
-	import { QualificationWorkFormData } from "@/entities/entities"
+	import { QualificationWorkFormData } from "../../entities/entities"
 
 	@Component({
 		name: "QualificationWorkTable",
@@ -63,7 +63,7 @@
 		private isInserting: boolean = false
 
 		private cancel() {
-			this.$router.push({name: "QualificationWorkTable"})
+			this.$router.push({name: "ShowQualificationWork"})
 		}
 
 		private insert(work: QualificationWorkFormData, files: File[]) {

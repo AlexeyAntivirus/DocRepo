@@ -1,15 +1,18 @@
 import Vue from "vue"
 import Router from "vue-router"
-import QualificationWorkTable from "@/components/QualificationWorkTable.vue"
-import InsertQualificationWork from "@/components/InsertQualificationWork.vue"
-import StudentsForm from "@/components/StudentsForm.vue"
+import QualificationWorkTable from "@/components/works/QualificationWorkTable.vue"
+import InsertQualificationWork from "@/components/works/InsertQualificationWork.vue"
+import StudentsTable from "@/components/student/StudentsTable.vue"
+import InsertGroupForm from "@/components/group/InsertGroupForm.vue"
+import GroupsTable from "@/components/group/GroupsTable.vue"
+import InsertStudentForm from "@/components/student/InsertStudentForm.vue"
 
 Vue.use(Router)
 
 export default new Router({
 	routes: [
 		{
-			name: "QualificationWorkTable",
+			name: "ShowQualificationWork",
 			path: "/works",
 			component: QualificationWorkTable,
 		},
@@ -19,9 +22,24 @@ export default new Router({
 			component: InsertQualificationWork
 		},
 		{
-			name: "InsertStudent",
+			name: "ShowStudent",
 			path: "/students",
-			component: StudentsForm
+			component: StudentsTable
+		},
+		{
+			name: "InsertStudentForm",
+			path: "/students/insert",
+			component: InsertStudentForm
+		},
+		{
+			name: "ShowGroup",
+			path: "/groups",
+			component: GroupsTable
+		},
+		{
+			name: "InsertGroupForm",
+			path: "/groups/insert",
+			component: InsertGroupForm
 		}
 	],
 })

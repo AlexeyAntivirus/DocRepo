@@ -7,10 +7,10 @@
 					<el-radio label="Курсова"></el-radio>
 				</el-radio-group>
 			</el-form-item>
-			<el-form-item size="small" prop="extramural" label="Заочний">
+			<el-form-item size="small" prop="extramural" label="Заочний: ">
 				<el-checkbox v-model="value.extramural"></el-checkbox>
 			</el-form-item>
-			<el-form-item size="small" prop="shortened" label="Скорочений">
+			<el-form-item size="small" prop="shortened" label="Скорочений: ">
 				<el-checkbox v-model="value.shortened"></el-checkbox>
 			</el-form-item>
 			<el-form-item size="small" label="Навчальний рік: ">
@@ -145,9 +145,7 @@
 	import {Component, Prop, Watch} from "vue-property-decorator"
 	import Vue from "vue"
 	import {DisciplineView, GroupView, QualificationWorkFormData, StudentView, TeacherView, 
-		validateArrayRequired, validateObjectRequired, validateRequired, validateString} from "../entities/entities"
-	import eventbus from "../events/eventbus"
-	import isEqual from "lodash.isequal"
+		validateArrayRequired, validateObjectRequired, validateString} from "../../entities/entities"
 
 	@Component({
 		name: "QualificationWorkForm"

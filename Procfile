@@ -1,0 +1,1 @@
+web: java -jar Server/target/docrepo.jar
