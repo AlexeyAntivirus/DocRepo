@@ -246,7 +246,6 @@ public class QualificationWorkService {
 				this.documentUploadingService.deleteFile(targetPath);
 			}
 
-
 			UploadFileOptions options = UploadFileOptions.builder()
 					.studyYear(payload.getBeginYear() + "-" + payload.getEndYear())
 					.educationLevel(payload.getEducationLevel())

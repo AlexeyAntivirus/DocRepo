@@ -1,7 +1,7 @@
 <template>
 	<el-container style="height: 100%">
 		<el-col :span="16" :offset="4" style="height: 90vh;">
-			<groups-form
+			<discipline-form
 					ref="groupsForm"
 					v-model="value"
 					:is-update="false"
@@ -15,38 +15,31 @@
 
 <script lang="tsx">
 	import Vue from "vue"
-	import { Component } from "vue-property-decorator"
-	import { Group } from "../../entities/entities"
-	import GroupsForm from "./GroupsForm.vue"
+	import {Component, Prop, Watch} from "vue-property-decorator"
+	// import {Discipline, DisciplineModel, validateObjectRequired, validateString} from "../../entities/entities"
+	import DisciplineForm from "./DisciplineForm.vue"
+	import {Discipline} from "../../entities/entities"
 
 	@Component({
-		name: "InsertGroupForm",
-		components: {GroupsForm}
+		name: "InsertDisciplineForm",
+		components: {DisciplineForm}
 	})
-	export default class GroupsTable extends Vue {
+	export default class InsertDisciplineTable extends Vue {
 		private isInserting: boolean = false
 
-		private value: Group = {
+		private value: Discipline = {
 			id: 0,
+			shortName: "",
+			workType: "курсова робота",
 			name: "",
-			courseNumber: 1,
-			faculty: "",
-			specialty: "",
-			branch: "",
-			educationLevel: "",
-			educationProgram: "",
-			beginYear: 2018,
-			endYear: 2019,
-			semesterType: "Весняний",
-			extramural: false,
-			shortened: false
+			semesterNumber: 1
 		}
 
-		private insert(group: Group) {
+		private insert(discipline: Discipline) {
 			this.isInserting = true
-			this.axios.put("/group/insert", group).then((resp) => {
+			this.axios.put("/discipline/insert", discipline).then((resp) => {
 				if (resp.data.successful) {
-					this.$alert("Група успішно додана", "Успіх", {
+					this.$alert("Предмет успішно додан", "Успіх", {
 						type: "success",
 						confirmButtonText: "OK"
 					})
@@ -62,7 +55,7 @@
 		}
 
 		private cancel() {
-			this.$router.push({name: "ShowGroup"})
+			this.$router.push({name: "ShowDiscipline"})
 		}
 	}
 </script>

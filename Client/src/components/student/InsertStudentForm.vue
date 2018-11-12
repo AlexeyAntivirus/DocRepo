@@ -49,9 +49,9 @@
 			this.$router.push({name: "ShowStudent"})
 		}
 
-		private insert() {
+		private insert(student: Student) {
 			this.isInserting = true
-			this.axios.put("/student/insert", this.value).then((resp) => {
+			this.axios.put("/student/insert", student).then((resp) => {
 				if (resp.data.successful) {
 					this.$alert("Студент успішно додан", "Успіх", {
 						type: "success",

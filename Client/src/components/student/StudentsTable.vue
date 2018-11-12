@@ -10,10 +10,10 @@
 						</el-radio-group>
 					</el-form-item>
 					<el-form-item size="mini" prop="extramural" label="Заочний: ">
-						<el-checkbox v-model="value.extramural"></el-checkbox>
+						<el-checkbox v-model="value.extramural" @change="reset"></el-checkbox>
 					</el-form-item>
 					<el-form-item size="mini" prop="shortened" label="Скорочений: ">
-						<el-checkbox v-model="value.shortened"></el-checkbox>
+						<el-checkbox v-model="value.shortened" @change="reset"></el-checkbox>
 					</el-form-item>
 					<el-form-item size="mini" label="Навчальний рік: " style="width: 50%">
 						<el-col :span="8">
@@ -57,12 +57,22 @@
 					</el-form-item>
 				</el-form>
 				<el-table :data="tableData" border style="width: 100%" height="55vh">
-					<el-table-column prop="fullName" label="ПІБ"/>
+					<el-table-column prop="fullName" label="ПІБ" width="520"/>
 					<el-table-column prop="group.groupName" label="Група" width="320"/>
 					<el-table-column prop="beginYear" label="Початок року" width="120"/>
 					<el-table-column prop="endYear" label="Кінець року" width="120"/>
 					<el-table-column prop="semesterType" label="Семестр" width="120"/>
 					<el-table-column prop="courseNumber" label="Курс" width="120"/>
+					<el-table-column prop="extramural" label="Заочний" width="180">
+						<template slot-scope="scope" style="white-space: pre-line">
+							<el-icon :class="[scope.row.extramural ? 'el-icon-check' : 'el-icon-close']"/>
+						</template>
+					</el-table-column>
+					<el-table-column prop="shortened" label="Скорочений" width="180">
+						<template slot-scope="scope" style="white-space: pre-line">
+							<el-icon :class="[scope.row.shortened ? 'el-icon-check' : 'el-icon-close']"/>
+						</template>
+					</el-table-column>
 					<el-table-column fixed="right" width="150" align="right">
 						<template slot-scope="scope">
 							<el-button type="text" @click="select(tableData[scope.$index])">
@@ -203,13 +213,14 @@
 						type: "error",
 						confirmButtonText: "OK",
 					})
+					this.isLoading = false
 				})
 		}
 
-		private update() {
-			this.axios.post("/student/update", this.selectedStudent).then((resp) => {
+		private update(student: Student) {
+			this.axios.post("/student/update", student).then((resp) => {
 				if (resp.data.successful) {
-					this.$alert("Студент успішно додан", "Успіх", {type: "success", confirmButtonText: "OK"})
+					this.$alert("Інформація про студента успішно відредагована", "Успіх", {type: "success", confirmButtonText: "OK"})
 				} else {
 					this.$alert("З'явилася якась помилка", "Помилка", {type: "error", confirmButtonText: "OK"})
 				}

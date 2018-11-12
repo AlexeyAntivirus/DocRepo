@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class InsertNewTeacherRequestPayload {
+    private long id;
     private String fullName;
     private String cathedra;
     private String position;

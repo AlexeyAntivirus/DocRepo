@@ -9,11 +9,13 @@
     "start": "npm run serve"
   },
   "dependencies": {
+    "chart.js": "^2.7.3",
     "element-ui": "^2.3.6",
     "filepond": "^3.2.5",
     "lodash": "^4.17.11",
     "lodash.isequal": "^4.5.0",
     "vue": "^2.5.17",
+    "vue-chartjs": "^3.4.0",
     "vue-class-component": "^6.0.0",
     "vue-filepond": "^4.0.0",
     "vue-modal-dialogs": "^3.0.0",

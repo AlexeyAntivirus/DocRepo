@@ -109,11 +109,24 @@ public class GroupService {
 
 	public UpdateGroupByParameterResponsePayload updateGroupByParameter(UpdateGroupByParameterRequestPayload payload) {
 		int update = template.update(
-				"UPDATE groups " +
-						"SET " + payload.getParameterKey() + " = :parameterValue " +
-						"WHERE id = :id",
-				new MapSqlParameterSource("parameterValue", payload.getParameterValue())
+				"UPDATE groups\n" +
+						"   SET nazva=:name, kurs=:courseNumber, fakult=:faculty, galuz=:branch, spec=:specialty, okr=:educationLevel, op=:educationProgram, \n" +
+						"       rik1=:beginYear, rik2=:endYear, skor=:isShortened, zao=:isExtramural, sem=:semesterType\n" +
+						" WHERE id=:id;\n",
+				new MapSqlParameterSource()
 						.addValue("id", payload.getId())
+						.addValue("beginYear", payload.getBeginYear())
+						.addValue("endYear", payload.getEndYear())
+						.addValue("semesterType", payload.getSemesterType().getNumber())
+						.addValue("name", payload.getName())
+						.addValue("specialty", payload.getSpecialty())
+						.addValue("educationLevel", payload.getEducationLevel())
+						.addValue("educationProgram", payload.getEducationProgram())
+						.addValue("courseNumber", payload.getCourseNumber())
+						.addValue("isShortened", payload.isShortened() ? 1 : 0)
+						.addValue("isExtramural", payload.isExtramural() ? 1 : 0)
+						.addValue("faculty", payload.getFaculty())
+						.addValue("branch", payload.getBranch())
 		);
 
 		return UpdateGroupByParameterResponsePayload.builder()

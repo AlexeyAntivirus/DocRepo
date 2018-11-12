@@ -15,4 +15,6 @@ public class Student {
     private SemesterType semesterType;
     private GroupView group;
     private int courseNumber;
+    private boolean isExtramural;
+    private boolean isShortened;
 }

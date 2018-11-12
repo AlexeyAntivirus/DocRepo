@@ -8,10 +8,10 @@
 				</el-radio-group>
 			</el-form-item>
 			<el-form-item size="small" prop="extramural" label="Заочний: ">
-				<el-checkbox v-model="value.extramural"></el-checkbox>
+				<el-checkbox v-model="value.extramural" @change="reset"></el-checkbox>
 			</el-form-item>
 			<el-form-item size="small" prop="shortened" label="Скорочений: ">
-				<el-checkbox v-model="value.shortened"></el-checkbox>
+				<el-checkbox v-model="value.shortened" @change="reset"></el-checkbox>
 			</el-form-item>
 			<el-form-item size="small" label="Навчальний рік: ">
 				<el-col :span="8">
@@ -206,6 +206,8 @@
 				endYear: this.value.endYear,
 				courseNumber: this.value.courseNumber,
 				semester: this.value.semesterNumber,
+				extramural: this.value.extramural,
+				shortened: this.value.shortened,
 				groupNamePart
 			}).then((value) => {
 				this.isLoading = false

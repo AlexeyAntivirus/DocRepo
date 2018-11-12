@@ -121,6 +121,8 @@ public class StudentService {
 						" sg.rik1," +
 						" sg.rik2," +
 						" sg.sem," +
+						" groups.zao as zao," +
+						" groups.skor as skor, " +
 						" groups.id as groupId," +
 						" groups.nazva as groupName," +
 						" groups.kurs as courseNumber " +

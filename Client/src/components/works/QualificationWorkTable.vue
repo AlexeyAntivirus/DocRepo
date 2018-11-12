@@ -73,8 +73,8 @@
 							<a :href="$globalConfig.serverUrl + 'works/download-by-id?id=' + scope.row.id" target="_blank">
 								<el-icon class="el-icon-download" style="font-size: 25px"></el-icon>
 							</a>
-							<el-button type="text" @click="select(tableData[scope.$index])">
-								<el-icon class="el-icon-edit" style="font-size: 25px"></el-icon>	
+							<el-button type="text" @click.native="select(tableData[scope.$index])">
+								<el-icon class="el-icon-edit" style="font-size: 25px"></el-icon>
 							</el-button>
 						</template>
 					</el-table-column>
@@ -132,6 +132,7 @@
 			if (this.visible) {
 				this.visible = false
 			}
+
 			this.selectedWork = JSON.parse(JSON.stringify(element))
 			this.visible = true
 		}
@@ -146,8 +147,10 @@
 				})
 				.catch((reason) => {
 					this.$alert(reason.reason, "Помилка", {
-						type: "error"
+						type: "error",
+						confirmButtonText: "OK"
 					})
+					this.isLoading = false
 				})
 		}
 
@@ -194,6 +197,33 @@
 				})
 		}
 
+		private delete(element: QualificationWorkFormData) {
+			console.log(element)
+			this.axios.delete("/works/delete", {
+				params: {
+					id: this.selectedWork.id
+				}
+			})
+				.then(resp => {
+					if (!resp.data.successful) {
+						this.$alert("З'явилася якась помилка", "Помилка", {
+							type: "error",
+							confirmButtonText: "OK"
+						})
+					} else {
+						this.$alert("Дані успішно видалені", "Успіх", {
+							type: "success",
+							confirmButtonText: "OK"
+						})
+					}
+				})
+				.catch(reason => {
+					this.$alert(reason.reason, "Помилка", {
+						type: "error",
+						confirmButtonText: "OK"
+					})
+				})
+		}
 	}
 </script>
 

@@ -24,6 +24,8 @@ public class StudentMapper implements RowMapper<Student> {
 						.id(rs.getLong("groupId"))
 						.groupName(rs.getString("groupName"))
 						.build())
+				.isShortened(rs.getInt("skor") == 1)
+				.isExtramural(rs.getInt("zao") == 1)
 				.build();
 	}
 }

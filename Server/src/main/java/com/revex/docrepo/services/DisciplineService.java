@@ -112,15 +112,18 @@ public class DisciplineService {
 
 	public UpdateDisciplineByParamResponsePayload updateDisciplineByParam(UpdateDisciplineByParamRequestPayload payload) {
 		int update = template.update(
-				"UPDATE predm SET " + payload.getParameterKey() +
-						" = :parameterValue WHERE id = :disciplineId;",
+				"UPDATE predm\n" +
+						"   SET nazva=:name, skornazva=:shortName, sem=:semesterNumber, vid=:workType\n" +
+						" WHERE id=:id;\n",
 				new MapSqlParameterSource()
-						.addValue("parameterValue", payload.getParameterValue())
 						.addValue("id", payload.getId())
+						.addValue("name", payload.getName())
+						.addValue("shortName", payload.getShortName())
+						.addValue("semesterNumber", payload.getSemesterNumber())
+						.addValue("workType", payload.getWorkType().getUkrainianValue())
 		);
 
-		return UpdateDisciplineByParamResponsePayload
-				.builder()
+		return UpdateDisciplineByParamResponsePayload.builder()
 				.isSuccessful(update == 1)
 				.build();
 	}

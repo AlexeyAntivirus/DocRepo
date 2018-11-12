@@ -135,3 +135,26 @@ export function validateString(val: string) {
 
 	return "fine"
 }
+
+export interface Teacher {
+	id: number
+	fullName: string
+	cathedra: string
+	position: string
+	degree: string
+	rank: string
+	working: boolean
+}
+
+export interface TeacherModel {
+	cathedra: string
+	status: string
+}
+
+export interface Discipline {
+	id: number
+	name: string
+	shortName: string
+	semesterNumber: number
+	workType: string
+}

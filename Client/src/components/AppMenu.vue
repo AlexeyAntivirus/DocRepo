@@ -10,6 +10,7 @@
 		<el-menu-item index="/prep">Викладачі</el-menu-item>
 		<el-menu-item index="/groups">Групи</el-menu-item>
 		<el-menu-item index="/disciplines">Предмети</el-menu-item>
+		<el-menu-item index="/stat">Статистика</el-menu-item>
 	</el-menu>
 </template>
 

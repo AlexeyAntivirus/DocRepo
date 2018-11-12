@@ -2,16 +2,16 @@
 	<el-card shadow="never">
 		<el-form :model="value">
 			<el-form-item size="small" label="Семестр: " prop="workType">
-				<el-radio-group v-model="value.semesterType" @change="reset">
+				<el-radio-group v-model="value.semesterType" @change="onSemesterTypeChanged">
 					<el-radio label="Весняний">Весняний</el-radio>
 					<el-radio label="Осінній">Осінній</el-radio>
 				</el-radio-group>
 			</el-form-item>
 			<el-form-item size="small" prop="extramural" label="Заочний: ">
-				<el-checkbox v-model="value.extramural"></el-checkbox>
+				<el-checkbox v-model="value.extramural" @change="reset"></el-checkbox>
 			</el-form-item>
 			<el-form-item size="small" prop="shortened" label="Скорочений: ">
-				<el-checkbox v-model="value.shortened"></el-checkbox>
+				<el-checkbox v-model="value.shortened" @change="reset"></el-checkbox>
 			</el-form-item>
 			<el-form-item size="small" label="Навчальний рік: ">
 				<el-col :span="8">
@@ -92,8 +92,6 @@
 		@Prop({required: true})
 		private value: Student
 
-		private tableData: Student[] = []
-
 		private groupSuggestions: GroupView[] = []
 
 		private mounted() {
@@ -105,6 +103,10 @@
 			this.groupSuggestions = [val.group]
 
 			this.$emit("input", val)
+		}
+
+		private onSemesterTypeChanged(val: string) {
+			this.reset()
 		}
 
 		private onBeginYearChanged(val: number) {

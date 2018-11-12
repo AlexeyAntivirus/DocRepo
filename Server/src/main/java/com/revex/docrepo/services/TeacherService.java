@@ -55,10 +55,20 @@ public class TeacherService {
 	}
 
 	public FindTeachersByParamResponsePayload findTeachersByParam(FindTeachersByParamRequestPayload payload) {
-		List<Teacher> query = template.query("SELECT * FROM prep " +
-						"WHERE cast(" + payload.getParameterKey() + " as varchar(512)) ~ cast(:parameterValue as varchar(512))",
-				new MapSqlParameterSource("parameterValue", payload.getParameterValue()),
-				mapper);
+		List<Teacher> query;
+
+		if (payload.getStatus().equals("Діючі")) {
+			query = template.query("SELECT * FROM prep WHERE kaf ~ :cathedra AND diuchi = :isWorking",
+					new MapSqlParameterSource()
+							.addValue("cathedra", payload.getCathedra())
+							.addValue("isWorking", 1),
+					mapper);
+		} else {
+			query = template.query("SELECT * FROM prep WHERE kaf ~ :cathedra",
+					new MapSqlParameterSource()
+							.addValue("cathedra", payload.getCathedra()),
+					mapper);
+		}
 
 		return FindTeachersByParamResponsePayload.builder()
 				.teachers(query)
@@ -79,7 +89,7 @@ public class TeacherService {
 	public InsertNewTeacherResponsePayload insertNewTeacher(InsertNewTeacherRequestPayload payload) {
 		int update = template.update(
 				"INSERT INTO prep (pib, kaf, stup, zvan, posada, diuchi) " +
-						"VALUES (:fullName, :cathedra, :position, :degree, :rank, :isWorking);",
+						"VALUES (:fullName, :cathedra, :degree, :rank, :position, :isWorking);",
 				new MapSqlParameterSource()
 						.addValue("fullName", payload.getFullName())
 						.addValue("cathedra", payload.getCathedra())
@@ -104,11 +114,17 @@ public class TeacherService {
 
 	public UpdateTeacherByParamResponsePayload updateTeacherByParam(UpdateTeacherByParamRequestPayload payload) {
 		int update = template.update(
-				"UPDATE prep SET " + payload.getParameterKey() +
-						" = :parameterValue WHERE id = :id",
+				"UPDATE prep\n" +
+						"   SET pib=:fullName, kaf=:cathedra, stup=:degree, zvan=:rank, posada=:position, diuchi=:isWorking\n" +
+						" WHERE id=:id;",
 				new MapSqlParameterSource()
-						.addValue("parameterValue", payload.getParameterValue())
 						.addValue("id", payload.getId())
+						.addValue("fullName", payload.getFullName())
+						.addValue("cathedra", payload.getCathedra())
+						.addValue("position", payload.getPosition())
+						.addValue("degree", payload.getDegree())
+						.addValue("rank", payload.getRank())
+						.addValue("isWorking", payload.isWorking() ? 1 : 0)
 		);
 
 		return UpdateTeacherByParamResponsePayload.builder()
