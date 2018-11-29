@@ -102,11 +102,14 @@ public class DisciplineService {
 
 	public DeleteDisciplineByIdResponsePayload deleteDisciplineById(DeleteDisciplineByIdRequestPayload payload) {
 		int update = template.update(
+				"UPDATE kd SET predmid = NULL WHERE predmid = :disciplineId;",
+				new BeanPropertySqlParameterSource(payload));
+		update += template.update(
 				"DELETE FROM predm WHERE id = :disciplineId;",
 				new BeanPropertySqlParameterSource(payload));
 
 		return DeleteDisciplineByIdResponsePayload.builder()
-				.isSuccessful(update == 1)
+				.isSuccessful(update > 1)
 				.build();
 	}
 

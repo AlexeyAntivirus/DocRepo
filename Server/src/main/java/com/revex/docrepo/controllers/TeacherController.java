@@ -4,6 +4,8 @@ import com.revex.docrepo.exchange.teacher.DeleteTeacherByIdResponsePayload;
 import com.revex.docrepo.exchange.teacher.DeleteTeacherByIdRequestPayload;
 import com.revex.docrepo.exchange.teacher.FindTeacherViewsByParamRequestPayload;
 import com.revex.docrepo.exchange.teacher.FindTeacherViewsByParamResponsePayload;
+import com.revex.docrepo.exchange.teacher.FindTeacherViewsByParamsRequestPayload;
+import com.revex.docrepo.exchange.teacher.FindTeacherViewsByParamsResponsePayload;
 import com.revex.docrepo.exchange.teacher.FindTeachersByParamRequestPayload;
 import com.revex.docrepo.exchange.teacher.FindTeachersByParamResponsePayload;
 import com.revex.docrepo.exchange.teacher.GetAllTeacherViewsResponsePayload;
@@ -54,6 +56,13 @@ public class TeacherController {
 	}
 
 	@PostMapping("/view/find")
+	@ResponseBody
+	public FindTeacherViewsByParamsResponsePayload findTeachersByParam(
+			@RequestBody FindTeacherViewsByParamsRequestPayload payload) {
+		return this.service.findTeacherViewsByParams(payload);
+	}
+
+	@PostMapping("/view/find-by-name")
 	@ResponseBody
 	public FindTeacherViewsByParamResponsePayload findTeachersByParam(
 			@RequestBody FindTeacherViewsByParamRequestPayload payload) {

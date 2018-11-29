@@ -25,12 +25,36 @@ body, html {
 	padding: 0;
 	margin: 0;
 	background-color: $--background-color-base;
+	max-width: 100vw;
+	max-height: 100vh;
+	width: 100vw;
+	height: 100vh;
+}
+
+.warn-table-row {
+	background-color: rgb(165, 207, 238) !important;
+}
+
+.el-menu-item {
+	padding-left: 10px !important;
+
+	.el-tooltip {
+		padding-left: 10px !important;
+	}
 }
 
 .el-menu-item.is-active {
 	border-left: 4px solid $--color-warning;
-	padding-left: 16px !important;
+	padding-left: 6px !important;
 	background-color: darken($--color-primary, 10%) !important;
+
+
+	.el-tooltip {
+		padding-left: 6px !important;
+	}
+}
+
+.view-container {
 }
 
 @import "~element-ui/packages/theme-chalk/src/index";

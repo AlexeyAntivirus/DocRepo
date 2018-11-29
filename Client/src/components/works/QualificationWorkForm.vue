@@ -14,14 +14,14 @@
 				<el-checkbox v-model="value.shortened" @change="reset"></el-checkbox>
 			</el-form-item>
 			<el-form-item size="small" label="Навчальний рік: ">
-				<el-col :span="8">
+				<el-col :span="11">
 					<el-form-item prop="beginYear">
 						<el-input-number size="mini" v-model="value.beginYear" style="width: 100%;"
 						                 @change="onBeginYearChanged" :min="1930" :max="2070"/>
 					</el-form-item>
 				</el-col>
 				<el-col class="line" :span="2">-</el-col>
-				<el-col :span="8">
+				<el-col :span="11">
 					<el-form-item prop="endYear">
 						<el-input-number size="mini" v-model="value.endYear" style="width: 100%;"
 						                 @change="onEndYearChanged" :min="1931" :max="2071"/>
@@ -130,8 +130,17 @@
 					<el-option value="не задовільно" label="не задовільно"/>
 				</el-select>
 			</el-form-item>
-			<el-form-item prop="files" label="Файли">
-				<input ref="fileInput" type="file" multiple @change="add"/>
+			<el-form-item prop="documentFile" label="Файл пояснювальної записки">
+				<input ref="documentFileInput" type="file"
+				       accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+				       @change="addDocumentFile"/>
+			</el-form-item>
+			<el-form-item prop="presentationFile" label="Файл презентації">
+				<input ref="presentationFileInput" type="file" @change="addPresentationFile"
+						accept="application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"/>
+			</el-form-item>
+			<el-form-item prop="additionFiles" label="Додаткові файли">
+				<input ref="additionFilesInput" type="file" multiple @change="addAdditionFiles"/>
 			</el-form-item>
 			<el-form-item>
 				<el-button type="primary" :loading="isSubmitting" @click.prevent.stop="submitFinally">{{ submitButtonName }}</el-button>
@@ -144,8 +153,10 @@
 <script lang="tsx">
 	import {Component, Prop, Watch} from "vue-property-decorator"
 	import Vue from "vue"
-	import {DisciplineView, GroupView, QualificationWorkFormData, StudentView, TeacherView, 
-		validateArrayRequired, validateObjectRequired, validateString} from "../../entities/entities"
+	import {
+		DisciplineView, GroupView, QualificationWorkFormData, StudentView, TeacherView,
+		validateArrayRequired, validateObjectRequired, validateRequired, validateString
+	} from "@/entities/entities"
 
 	@Component({
 		name: "QualificationWorkForm"
@@ -162,7 +173,7 @@
 		private submitButtonName: string
 
 		@Prop()
-		private submit: (work: QualificationWorkFormData, files: File[]) => void
+		private submit: (work: QualificationWorkFormData, documentFile: File, presentationFile: File, files: File[]) => void
 
 		@Prop()
 		private cancel: () => void
@@ -170,7 +181,9 @@
 		@Prop({required: true})
 		private value: QualificationWorkFormData
 
-		private files: File[] = []
+		private additionFiles: File[] = []
+		private presentationFile: File | null = null
+		private documentFile: File | null = null
 		private selectedTeachers: number[] = []
 
 		private groupSuggestions: GroupView[] = []
@@ -398,9 +411,68 @@
 			this.value.educationProgram = ""
 		}
 
-		private add(a: Event) {
+		private addAdditionFiles(a: Event) {
 			const target = a.target as HTMLInputElement
-			this.files = Array.from(target.files!)
+
+			this.additionFiles = Array.from(target.files!)
+		}
+
+		private addDocumentFile(a: Event) {
+			const target = a.target as HTMLInputElement
+
+			for (const file of target.files) {
+				console.log(file.type)
+				if (file.type !== "application/msword" &&
+					file.type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+
+					this.$msgbox({
+						message: <span style="white-space: pre-line;">
+							{
+								"Ви намагаєтесь завантажити файли з неприпустимим форматом.\n"
+							}
+							{
+								"Доступні формати: '.doc', '.docx'.\n"
+							}
+						</span>,
+						type: "error",
+						confirmButtonText: "OK",
+						title: "Помилка"
+					})
+
+					this.resetFileInput(this.$refs.documentFileInput as HTMLInputElement)
+					return
+				}
+			}
+			this.documentFile = Array.from(target.files!)[0]
+		}
+
+		private addPresentationFile(a: Event) {
+			const target = a.target as HTMLInputElement
+
+			for (const file of target.files) {
+				console.log(file.type)
+				if (file.type !== "application/vnd.ms-powerpoint" &&
+					file.type !== "application/vnd.openxmlformats-officedocument.presentationml.presentation") {
+
+					this.$msgbox({
+						message: <span style="white-space: pre-line;">
+							{
+								"Ви намагаєтесь завантажити файли з неприпустимим форматом.\n"
+							}
+							{
+								"Доступні формати: '.ppt', '.pptx'.\n"
+							}
+						</span>,
+						type: "error",
+						confirmButtonText: "OK",
+						title: "Помилка"
+					})
+
+					this.resetFileInput(this.$refs.presentationFileInput as HTMLInputElement)
+					return
+				}
+			}
+			this.presentationFile = Array.from(target.files!)[0]
 		}
 
 		private onTeachersChanged(val: number[]) {
@@ -425,16 +497,25 @@
 			})
 		}
 
+		private resetFileInput(input: HTMLInputElement) {
+			input.files = null
+			input.value = ""
+		}
+
 		private submitFinally() {
 			const form = this.$refs.workForm as any
 
 			form.validate((value, object) => {
 				let errors = ""
 
-				if (validateArrayRequired(this.files) !== "fine" && !this.isUpdate) {
-					errors += "Ви не вибрали файли для завантаження\n"
+				if (validateRequired(this.presentationFile) !== "fine" && !this.isUpdate) {
+					errors += "Ви не додали презентацію\n"
 				}
-				
+
+				if (validateRequired(this.documentFile) !== "fine" && !this.isUpdate) {
+					errors += "Ви не додали пояснювальну записку\n"
+				}
+
 				if (validateObjectRequired(this.value.group, {id: 0, groupName: ""}) !== "fine") {
 					errors += "Ви не вибрали групу\n"
 				}
@@ -486,12 +567,12 @@
 						title: "Помилка"
 					})
 				} else {
-					this.submit(this.value, this.files)
+					this.submit(this.value, this.documentFile, this.presentationFile, this.additionFiles)
 
-					const input = this.$refs.fileInput as HTMLInputElement
-					input.value = ""
-					input.files = null
-					this.files = []
+					this.resetFileInput(this.$refs.additionFilesInput as HTMLInputElement)
+
+
+					this.additionFiles = []
 				}
 			})
 		}

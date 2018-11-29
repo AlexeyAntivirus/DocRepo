@@ -4,12 +4,16 @@ import com.revex.docrepo.database.entities.Student;
 import com.revex.docrepo.database.mappers.StudentMapper;
 import com.revex.docrepo.database.mappers.StudentViewMapper;
 import com.revex.docrepo.database.views.StudentView;
+import com.revex.docrepo.exchange.student.DeleteStudentByIdRequestPayload;
+import com.revex.docrepo.exchange.student.DeleteStudentByIdResponsePayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByFullNameAndGroupRequestPayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByFullNameAndGroupResponsePayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByParamRequestParameterRequestPayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByParamRequestParameterResponsePayload;
 import com.revex.docrepo.exchange.student.FindStudentsByFullNameAndGroupRequestPayload;
 import com.revex.docrepo.exchange.student.FindStudentsByFullNameAndGroupResponsePayload;
+import com.revex.docrepo.exchange.student.FindStudentsThatNotAssignedToGroupRequestPayload;
+import com.revex.docrepo.exchange.student.FindStudentsThatNotAssignedToGroupResponsePayload;
 import com.revex.docrepo.exchange.student.GetAllStudentsResponsePayload;
 import com.revex.docrepo.exchange.student.InsertNewStudentRequestPayload;
 import com.revex.docrepo.exchange.student.InsertNewStudentResponsePayload;
@@ -65,6 +69,26 @@ public class StudentService {
 				viewMapper);
 		return FindStudentViewsByParamRequestParameterResponsePayload.builder()
 				.students(parameterValue)
+				.build();
+	}
+
+	public FindStudentsThatNotAssignedToGroupResponsePayload findStudentsThatNotAssignedToGroup() {
+		List<Student> students = template.query("SELECT\n" +
+				"\tstud.id,\n" +
+				"\tstud.pib,\n" +
+				"\tNULL AS rik1,\n" +
+				"\tNULL AS rik2,\n" +
+				"\tNULL AS sem,\n" +
+				"\tNULL as zao,\n" +
+				"\tNULL as skor,\n" +
+				"\tNULL as groupId,\n" +
+				"\tNULL as groupName,\n" +
+				"\tNULL as courseNumber\n" +
+				"FROM stud\n" +
+				"WHERE NOT EXISTS(SELECT * FROM sg WHERE stud.id = sg.idstud)", mapper);
+
+		return FindStudentsThatNotAssignedToGroupResponsePayload.builder()
+				.students(students)
 				.build();
 	}
 
@@ -150,13 +174,45 @@ public class StudentService {
 				.addValue("groupId", payload.getGroup().getId());
 		template.update("UPDATE stud SET pib = :fullName WHERE id = :id", studentSqlParameterSource);
 
-		int update = template.update("UPDATE sg SET rik1 = :beginYear, " +
-				"rik2 = :endYear, " +
-				"sem = :semesterType, " +
-				"idgroup = :groupId " +
-				"WHERE idstud = :id;", sgSqlParameterSource);
+		boolean isNotAssigned = template.queryForObject(
+				"SELECT NOT EXISTS(SELECT * FROM sg WHERE stud.id = sg.idstud) FROM stud WHERE stud.id = :id",
+				new MapSqlParameterSource("id", payload.getId()),
+				Boolean.class);
+
+		int update;
+
+		if (isNotAssigned) {
+			update = template.update("INSERT INTO sg (idstud, idgroup, rik1, rik2, sem)\n" +
+							"VALUES (:studentId, :groupId, :beginYear, :endYear, :semester);",
+					new MapSqlParameterSource()
+							.addValue("studentId", payload.getId())
+							.addValue("groupId", payload.getGroup().getId())
+							.addValue("beginYear", payload.getBeginYear())
+							.addValue("endYear", payload.getEndYear())
+							.addValue("semester", payload.getSemesterType().getNumber())
+			);
+		} else {
+			update = template.update("UPDATE sg SET rik1 = :beginYear, " +
+					"rik2 = :endYear, " +
+					"sem = :semesterType, " +
+					"idgroup = :groupId " +
+					"WHERE idstud = :id;", sgSqlParameterSource);
+		}
 
 		return UpdateStudentByIdResponsePayload.builder()
+				.isSuccessful(update > 0)
+				.build();
+	}
+
+	public DeleteStudentByIdResponsePayload deleteStudentById(DeleteStudentByIdRequestPayload payload) {
+		int update = template.update("UPDATE kd SET studid = NULL WHERE kd.studid = :id",
+				new BeanPropertySqlParameterSource(payload));
+		update += template.update("DELETE FROM sg WHERE sg.idstud = :id",
+				new BeanPropertySqlParameterSource(payload));
+		update += template.update("DELETE FROM stud WHERE stud.id = :id",
+				new BeanPropertySqlParameterSource(payload));
+
+		return DeleteStudentByIdResponsePayload.builder()
 				.isSuccessful(update > 0)
 				.build();
 	}

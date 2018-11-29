@@ -15,6 +15,8 @@ import TeacherTable from "@/components/teachers/TeacherTable.vue"
 import InsertDisciplineForm from "@/components/disciplines/InsertDisciplineForm.vue"
 import DisciplineTable from "@/components/disciplines/DisciplineTable.vue"
 
+import ReportForm from "@/components/report/ReportForm.vue"
+
 import Stat from "@/components/stat/Stat.vue"
 
 Vue.use(Router)
@@ -75,6 +77,11 @@ export default new Router({
 			name: "Stat",
 			path: "/stat",
 			component: Stat
+		},
+		{
+			name: "Report",
+			path: "/report",
+			component: ReportForm
 		},
 	],
 })

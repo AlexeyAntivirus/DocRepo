@@ -1,11 +1,14 @@
 package com.revex.docrepo.controllers;
 
+import com.revex.docrepo.exchange.student.DeleteStudentByIdRequestPayload;
+import com.revex.docrepo.exchange.student.DeleteStudentByIdResponsePayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByFullNameAndGroupRequestPayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByFullNameAndGroupResponsePayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByParamRequestParameterRequestPayload;
 import com.revex.docrepo.exchange.student.FindStudentViewsByParamRequestParameterResponsePayload;
 import com.revex.docrepo.exchange.student.FindStudentsByFullNameAndGroupRequestPayload;
 import com.revex.docrepo.exchange.student.FindStudentsByFullNameAndGroupResponsePayload;
+import com.revex.docrepo.exchange.student.FindStudentsThatNotAssignedToGroupResponsePayload;
 import com.revex.docrepo.exchange.student.GetAllStudentsResponsePayload;
 import com.revex.docrepo.exchange.student.InsertNewStudentRequestPayload;
 import com.revex.docrepo.exchange.student.InsertNewStudentResponsePayload;
@@ -63,5 +66,17 @@ public class StudentController {
 	@PostMapping("/update")
 	public UpdateStudentByIdResponsePayload updateStudentById(@RequestBody UpdateStudentByIdRequestPayload payload) {
 		return this.service.updateStudentById(payload);
+	}
+
+	@ResponseBody
+	@DeleteMapping("/delete")
+	public DeleteStudentByIdResponsePayload deleteStudentById(DeleteStudentByIdRequestPayload payload) {
+		return this.service.deleteStudentById(payload);
+	}
+
+	@ResponseBody
+	@GetMapping("/all/not-assigned")
+	public FindStudentsThatNotAssignedToGroupResponsePayload findStudentsThatNotAssignedToGroup() {
+		return this.service.findStudentsThatNotAssignedToGroup();
 	}
 }

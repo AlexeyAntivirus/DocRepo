@@ -1,12 +1,14 @@
-import Vue from "vue"
+import Vue, {VueConstructor} from "vue"
 import {PluginObject} from "vue"
 
 export interface GlobalConfig {
     readonly serverUrl: string
+	readonly isInternetExplorer: boolean
 }
 
 export const globalConfig: GlobalConfig = {
-    serverUrl: process.env.NODE_ENV === "production" ? "/docrepo/" : "http://localhost:9216/docrepo/"
+    serverUrl: process.env.NODE_ENV === "production" ? "/docrepo/" : "http://localhost:9216/docrepo/",
+	isInternetExplorer: window.navigator.userAgent.indexOf("MSIE ") > 0
 }
 
 declare var window: any
@@ -18,15 +20,8 @@ declare module "vue/types/vue" {
 }
 
 export const GlobalConfigPlugin: PluginObject<GlobalConfig> = {
-    install: (VueInstance: any, options) => {
-        VueInstance.$globalConfig = globalConfig
-        Object.defineProperties(VueInstance.prototype, {
-            $globalConfig: {
-                get() {
-                	return globalConfig
-                }
-            },
-        })
+    install: (VueInstance: VueConstructor, options) => {
+        VueInstance.prototype.$globalConfig = globalConfig
     }
 }
 

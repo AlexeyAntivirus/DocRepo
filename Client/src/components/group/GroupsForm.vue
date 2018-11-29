@@ -151,22 +151,6 @@
 
 			return errors
 		}
-
-		/*{
-					id: 0,
-					name: "",
-					courseNumber: 0,
-					faculty: "",
-					specialty: "",
-					branch: "",
-					educationLevel: "",
-					educationProgram: "",
-					beginYear: 2018,
-					endYear: 2019,
-					semesterType: "Весняний",
-					extramural: false,
-					shortened: false
-				}*/
 	}
 </script>
 

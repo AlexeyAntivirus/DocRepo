@@ -1,5 +1,13 @@
 package com.revex.docrepo.services;
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.revex.docrepo.exceptions.DocRepoFileNotDeletedException;
 import com.revex.docrepo.exceptions.DocRepoFileNotUploadedException;
 import com.revex.docrepo.exceptions.DocRepoFilesProblemException;
@@ -35,6 +43,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -71,8 +80,50 @@ public class DocumentUploadingService {
 
 			return absoluteDirectoryPath;
 		} catch (IOException e) {
-			throw new DocRepoFileNotUploadedException(e);
+			throw new DocRepoFileNotUploadedException("Cannot upload file", e);
 		}
+	}
+
+	public void createCheckInfo(Path docsFilePath,
+								MultipartFile doc,
+	                            MultipartFile ppt,
+	                            List<MultipartFile> files) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		ObjectNode node = mapper.createObjectNode()
+				.put("doc", doc.getOriginalFilename())
+				.put("ppt", ppt.getOriginalFilename());
+		ArrayNode filesNode = mapper.createArrayNode();
+
+		for (MultipartFile file: files) {
+			filesNode = filesNode.add(file.getOriginalFilename());
+		}
+
+		node = (ObjectNode) node.set("files", filesNode);
+
+		ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+
+		try {
+			writer.writeValue(Files.newOutputStream(docsFilePath.resolve("check-info.json")), node);
+		} catch (IOException e) {
+			throw new DocRepoFilesProblemException("Cannot create check-info.json", e);
+		}
+	}
+
+	public JsonNode getCheckInfo(Path docsFilePath) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		ObjectReader reader = mapper.reader();
+
+		try {
+			return reader.readTree(Files.newInputStream(docsFilePath.resolve("check-info.json")));
+		} catch (IOException e) {
+			throw new DocRepoFilesProblemException("Cannot read check-info.json", e);
+		}
+	}
+
+	public boolean isCheckInfoExists(Path docsFilePath) {
+		return Files.exists(docsFilePath.resolve("check-info.json"));
 	}
 
 	public void deleteFile(Path path) {
@@ -97,7 +148,7 @@ public class DocumentUploadingService {
 				Files.delete(path);
 			}
 		} catch (IOException e) {
-			throw new DocRepoFileNotDeletedException(e);
+			throw new DocRepoFileNotDeletedException("Cannot delete files", e);
 		}
 	}
 
@@ -115,20 +166,22 @@ public class DocumentUploadingService {
 			DirectoryStream<Path> paths = Files.newDirectoryStream(filePath);
 
 			for (Path path1: paths) {
-				zipOutputStream.putNextEntry(new ZipEntry(path1.getFileName().toString()));
+				if (!path1.getFileName().toString().equals("check-info.json")) {
+					zipOutputStream.putNextEntry(new ZipEntry(path1.getFileName().toString()));
 
-				InputStream inputStream = new BufferedInputStream(Files.newInputStream(path1), 8192);
+					InputStream inputStream = new BufferedInputStream(Files.newInputStream(path1), 8192);
 
-				int length;
-				byte[] buffer = new byte[8192];
-				while ((length = inputStream.read(buffer)) != -1) {
-					zipOutputStream.write(buffer, 0, length);
+					int length;
+					byte[] buffer = new byte[8192];
+					while ((length = inputStream.read(buffer)) != -1) {
+						zipOutputStream.write(buffer, 0, length);
+					}
+
+					zipOutputStream.closeEntry();
 				}
-
-				zipOutputStream.closeEntry();
 			}
 		} catch (IOException e) {
-			throw new DocRepoFilesProblemException(e);
+			throw new DocRepoFilesProblemException("Cannot send file to client", e);
 		}
 	}
 

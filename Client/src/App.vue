@@ -1,5 +1,5 @@
 <template>
-	<el-container style="height: 100vh">
+	<el-container style="height: 100%">
 		<el-header class="header" height="56px">
 			<div class="header__logo">
 				<img :src="logoImg" width="48" height="48">
@@ -9,9 +9,7 @@
 			</div>
 		</el-header>
 		<el-container>
-			<el-aside width="250px">
-				<app-menu/>
-			</el-aside>
+			<app-menu/>
 			<el-main>
 				<router-view/>
 			</el-main>
@@ -23,6 +21,7 @@
 	import {Component} from "vue-property-decorator"
 	import Vue from "vue"
 	import AppMenu from "@/components/AppMenu.vue"
+	import {WindowSize} from "./plugins/window"
 	const logoImg = require("@/assets/logo.png")
 
 	@Component({
@@ -33,6 +32,7 @@
 	})
 	export default class App extends Vue {
 		private readonly logoImg = logoImg
+
 	}
 </script>
 

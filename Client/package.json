@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "chart.js": "^2.7.3",
+    "css-element-queries": "^1.1.1",
     "element-ui": "^2.3.6",
     "filepond": "^3.2.5",
     "lodash": "^4.17.11",
@@ -20,6 +21,7 @@
     "vue-filepond": "^4.0.0",
     "vue-modal-dialogs": "^3.0.0",
     "vue-property-decorator": "^7.0.0",
+    "vue-resize-directive": "^1.1.4",
     "vue-router": "^3.0.1"
   },
   "devDependencies": {

@@ -11,4 +11,6 @@ public class StatResponsePayload {
 	private int bGradeWorksCount;
 	private int cGradeWorksCount;
 	private int fGradeWorksCount;
+	private int quality;
+	private int success;
 }

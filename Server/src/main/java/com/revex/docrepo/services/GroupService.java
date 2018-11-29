@@ -97,13 +97,15 @@ public class GroupService {
 	}
 
 	public DeleteGroupByIdResponsePayload deleteGroupById(DeleteGroupByIdRequestPayload payload) {
-		int update = template.update(
+		int update = template.update("DELETE FROM sg WHERE idgroup = :id;",
+				new BeanPropertySqlParameterSource(payload));
+		update += template.update(
 				"DELETE FROM groups WHERE id = :id;",
 				new BeanPropertySqlParameterSource(payload)
 		);
 
 		return DeleteGroupByIdResponsePayload.builder()
-				.isSuccessful(update == 1)
+				.isSuccessful(update > 1)
 				.build();
 	}
 

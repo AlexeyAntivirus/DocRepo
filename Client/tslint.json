@@ -29,6 +29,33 @@
 		"no-var-requires": false,
 		"no-non-null-assertion": false,
 		"arrow-parens": false,
-		"no-trailing-whitespace": false
+		"no-trailing-whitespace": false,
+		"no-string-literal": false,
+		"max-classes-per-file": false
+	},
+	"jsRules": {
+		"quotemark": [
+			true,
+			"double"
+		],
+		"indent": false,
+		"semicolon": [
+			true,
+			"never"
+		],
+		"interface-name": false,
+		"ordered-imports": false,
+		"object-literal-sort-keys": false,
+		"no-consecutive-blank-lines": false,
+		"no-console": false,
+		"trailing-comma": false,
+		"eofline": false,
+		"no-require-imports": false,
+		"no-var-requires": false,
+		"no-non-null-assertion": false,
+		"arrow-parens": false,
+		"no-trailing-whitespace": false,
+		"no-string-literal": false,
+		"max-classes-per-file": false
 	}
 }

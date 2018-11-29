@@ -4,8 +4,9 @@ import App from "./App.vue"
 import router from "./router"
 import ElementUI from "element-ui"
 import "./styles.scss"
+import {WindowSizeWatcherPlugin} from "@/plugins/window"
 
-
+Vue.use(WindowSizeWatcherPlugin)
 Vue.use(ElementUI)
 
 const lang = require("element-ui/lib/locale/lang/ua")

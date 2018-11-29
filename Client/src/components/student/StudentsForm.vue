@@ -14,14 +14,14 @@
 				<el-checkbox v-model="value.shortened" @change="reset"></el-checkbox>
 			</el-form-item>
 			<el-form-item size="small" label="Навчальний рік: ">
-				<el-col :span="8">
+				<el-col :span="7">
 					<el-form-item prop="beginYear">
 						<el-input-number size="mini" v-model="value.beginYear" style="width: 100%;"
 						                 @change="onBeginYearChanged" :min="1930" :max="2070"/>
 					</el-form-item>
 				</el-col>
 				<el-col class="line" :span="2">-</el-col>
-				<el-col :span="8">
+				<el-col :span="7">
 					<el-form-item prop="endYear">
 						<el-input-number size="mini" v-model="value.endYear" style="width: 100%;"
 						                 @change="onEndYearChanged" :min="1931" :max="2071"/>

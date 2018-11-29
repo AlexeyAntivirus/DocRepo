@@ -8,6 +8,6 @@ import java.util.List;
 
 @Data
 @Builder
-public class FindTeacherViewsByParamResponsePayload {
-	private List<TeacherView> teacherViews;
+public class FindTeacherViewsByParamsResponsePayload {
+	private List<TeacherView> teachers;
 }

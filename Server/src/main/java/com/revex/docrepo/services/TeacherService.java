@@ -6,8 +6,10 @@ import com.revex.docrepo.database.mappers.TeacherViewMapper;
 import com.revex.docrepo.database.views.TeacherView;
 import com.revex.docrepo.exchange.teacher.DeleteTeacherByIdResponsePayload;
 import com.revex.docrepo.exchange.teacher.DeleteTeacherByIdRequestPayload;
-import com.revex.docrepo.exchange.teacher.FindTeacherViewsByParamRequestPayload;
 import com.revex.docrepo.exchange.teacher.FindTeacherViewsByParamResponsePayload;
+import com.revex.docrepo.exchange.teacher.FindTeacherViewsByParamRequestPayload;
+import com.revex.docrepo.exchange.teacher.FindTeacherViewsByParamsRequestPayload;
+import com.revex.docrepo.exchange.teacher.FindTeacherViewsByParamsResponsePayload;
 import com.revex.docrepo.exchange.teacher.FindTeachersByParamRequestPayload;
 import com.revex.docrepo.exchange.teacher.FindTeachersByParamResponsePayload;
 import com.revex.docrepo.exchange.teacher.GetAllTeacherViewsResponsePayload;
@@ -76,12 +78,27 @@ public class TeacherService {
 	}
 
 	public FindTeacherViewsByParamResponsePayload findTeacherViewsByParam(FindTeacherViewsByParamRequestPayload payload) {
-		List<TeacherView> query = template.query("SELECT id, pib FROM prep " +
-						"WHERE cast(" + payload.getParameterKey() + " as varchar(512)) ~ cast(:parameterValue as varchar(512))",
-				new MapSqlParameterSource("parameterValue", payload.getParameterValue()),
-				viewMapper);
+		List<TeacherView> query =
+				template.query("SELECT id, pib FROM prep " +
+								"WHERE pib ~ :fullName",
+						new MapSqlParameterSource()
+								.addValue("fullName", payload.getFullName()),
+						viewMapper);
 
 		return FindTeacherViewsByParamResponsePayload.builder()
+				.teacherViews(query)
+				.build();
+	}
+
+	public FindTeacherViewsByParamsResponsePayload findTeacherViewsByParams(FindTeacherViewsByParamsRequestPayload payload) {
+		List<TeacherView> query =
+				template.query("SELECT id, pib FROM prep " +
+						"WHERE pib ~ :fullName AND kaf ~ :cathedra",
+				new MapSqlParameterSource("cathedra", payload.getCathedra())
+						.addValue("fullName", payload.getFullName()),
+				viewMapper);
+
+		return FindTeacherViewsByParamsResponsePayload.builder()
 				.teachers(query)
 				.build();
 	}
@@ -105,10 +122,11 @@ public class TeacherService {
 	}
 
 	public DeleteTeacherByIdResponsePayload deleteTeacherById(DeleteTeacherByIdRequestPayload payload) {
-		int update = template.update("DELETE FROM prep WHERE id = :id", new BeanPropertySqlParameterSource(payload));
+		int update = template.update("DELETE FROM kerivniki WHERE idprep = :id", new BeanPropertySqlParameterSource(payload));
+		update += template.update("DELETE FROM prep WHERE id = :id", new BeanPropertySqlParameterSource(payload));
 
 		return DeleteTeacherByIdResponsePayload.builder()
-				.isSuccessful(update == 1)
+				.isSuccessful(update >= 1)
 				.build();
 	}
 

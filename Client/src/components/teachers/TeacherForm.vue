@@ -30,7 +30,7 @@
 <script lang="tsx">
 	import Vue from "vue"
 	import {Component, Prop, Watch} from "vue-property-decorator"
-	import {Teacher, validateObjectRequired, validateString} from "../../entities/entities"
+	import {Teacher, validateObjectRequired, validateString} from "@/entities/entities"
 
 	@Component({
 		name: "TeacherForm"
