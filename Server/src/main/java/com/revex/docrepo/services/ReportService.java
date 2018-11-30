@@ -1,5 +1,6 @@
 package com.revex.docrepo.services;
 
+import com.revex.docrepo.database.entities.QualificationWork;
 import com.revex.docrepo.database.utils.QualificationWorkType;
 import com.revex.docrepo.database.utils.ReportEntry;
 import com.revex.docrepo.exceptions.DocRepoFilesProblemException;
@@ -32,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 @Service
 public class ReportService {
@@ -40,8 +42,8 @@ public class ReportService {
 	                           int beginYear,
 	                           int endYear,
 	                           QualificationWorkType workType,
-	                           List<ReportEntry> bachelorReportEntries,
-	                           List<ReportEntry> masterReportEntries,
+	                           Set<QualificationWork> bachelorReportEntries,
+	                           Set<QualificationWork> masterReportEntries,
 	                           HttpServletResponse response) {
 		try (OutputStream outputStream = response.getOutputStream()) {
 			response.addHeader("Content-Disposition", "attachment; filename=report.docx");
@@ -120,7 +122,7 @@ public class ReportService {
 				14, true, true);
 	}
 
-	private void generateTable(XWPFDocument document, List<ReportEntry> entries, QualificationWorkType workType) {
+	private void generateTable(XWPFDocument document, Set<QualificationWork> entries, QualificationWorkType workType) {
 		XWPFTable table = document.createTable(entries.size() + 1, workType == QualificationWorkType.DIPLOMA_WORK ? 5 : 4);
 		table.setWidth(16 * 1440);
 
@@ -137,17 +139,19 @@ public class ReportService {
 					"листів\n", 1440, true);
 		}
 
-		for (int index = 0; index < entries.size(); index++) {
-			ReportEntry entry = entries.get(index);
-			XWPFTableRow row1 = table.getRow(index + 1);
+		int index = 1;
+		for (QualificationWork entry: entries) {
+			XWPFTableRow row1 = table.getRow(index);
 
-			this.setCell(row1.getCell(0), (index + 1) + "", 1440, false);
+			this.setCell(row1.getCell(0), (index) + "", 1440, false);
 			this.setCell(row1.getCell(1), entry.getTitle(), 5 * 1440, false);
-			this.setCell(row1.getCell(2), entry.getStudentName(), 6 * 1440, false);
+			this.setCell(row1.getCell(2), entry.getStudentFullName(), 6 * 1440, false);
 			this.setCell(row1.getCell(3), entry.getDocumentNumber() == null ? "" : entry.getDocumentNumber() + "", 1440, false);
 			if (workType == QualificationWorkType.DIPLOMA_WORK) {
 				this.setCell(row1.getCell(4),entry.getSlideNumber() == null ? "" : entry.getSlideNumber() + "", 1440, false);
 			}
+
+			index++;
 		}
 	}
 

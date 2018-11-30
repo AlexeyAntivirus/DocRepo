@@ -40,7 +40,7 @@ public class TeacherService {
 	}
 
 	public GetAllTeachersResponsePayload getAllTeachers() {
-		List<Teacher> query = template.query("SELECT * FROM prep", mapper);
+		List<Teacher> query = template.query("SELECT * FROM prep ORDER BY posada_int DESC", mapper);
 
 		return GetAllTeachersResponsePayload.builder()
 				.teachers(query)
@@ -49,7 +49,7 @@ public class TeacherService {
 
 	public GetAllTeacherViewsResponsePayload getAllTeacherViews() {
 		List<TeacherView> query = template.query(
-				"SELECT id, pib FROM prep", viewMapper);
+				"SELECT id, pib FROM prep ORDER BY posada_int DESC", viewMapper);
 
 		return GetAllTeacherViewsResponsePayload.builder()
 				.teacherViews(query)
@@ -60,13 +60,13 @@ public class TeacherService {
 		List<Teacher> query;
 
 		if (payload.getStatus().equals("Діючі")) {
-			query = template.query("SELECT * FROM prep WHERE kaf ~ :cathedra AND diuchi = :isWorking",
+			query = template.query("SELECT * FROM prep WHERE kaf ~ :cathedra AND diuchi = :isWorking ORDER BY posada_int DESC",
 					new MapSqlParameterSource()
 							.addValue("cathedra", payload.getCathedra())
 							.addValue("isWorking", 1),
 					mapper);
 		} else {
-			query = template.query("SELECT * FROM prep WHERE kaf ~ :cathedra",
+			query = template.query("SELECT * FROM prep WHERE kaf ~ :cathedra ORDER BY posada_int DESC",
 					new MapSqlParameterSource()
 							.addValue("cathedra", payload.getCathedra()),
 					mapper);
@@ -80,7 +80,7 @@ public class TeacherService {
 	public FindTeacherViewsByParamResponsePayload findTeacherViewsByParam(FindTeacherViewsByParamRequestPayload payload) {
 		List<TeacherView> query =
 				template.query("SELECT id, pib FROM prep " +
-								"WHERE pib ~ :fullName",
+								"WHERE pib ~ :fullName ORDER BY posada_int DESC",
 						new MapSqlParameterSource()
 								.addValue("fullName", payload.getFullName()),
 						viewMapper);
@@ -93,7 +93,7 @@ public class TeacherService {
 	public FindTeacherViewsByParamsResponsePayload findTeacherViewsByParams(FindTeacherViewsByParamsRequestPayload payload) {
 		List<TeacherView> query =
 				template.query("SELECT id, pib FROM prep " +
-						"WHERE pib ~ :fullName AND kaf ~ :cathedra",
+						"WHERE pib ~ :fullName AND kaf ~ :cathedra ORDER BY posada_int DESC",
 				new MapSqlParameterSource("cathedra", payload.getCathedra())
 						.addValue("fullName", payload.getFullName()),
 				viewMapper);

@@ -38,4 +38,6 @@ public class QualificationWork {
 	private List<Long> teachers;
 	private boolean isExtramural;
 	private boolean isShortened;
+	private Integer documentNumber;
+	private Integer slideNumber;
 }

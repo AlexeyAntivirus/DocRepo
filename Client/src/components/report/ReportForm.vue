@@ -42,7 +42,7 @@
 							           <!--:value="discipline" :label="discipline.shortName"/>-->
 						<!--</el-select>-->
 					<!--</el-form-item>-->
-					<el-form-item size="small" prop="educationProgram" label="ОП: ">
+					<el-form-item size="small" prop="educationProgram" label="ОП (Введіть повну назву): ">
 						<el-input size="small" v-model="value.educationProgram"/>
 					</el-form-item>
 					<el-form-item>

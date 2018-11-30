@@ -144,7 +144,7 @@
 			</el-form-item>
 			<el-form-item>
 				<el-button type="primary" :loading="isSubmitting" @click.prevent.stop="submitFinally">{{ submitButtonName }}</el-button>
-				<el-button @click.prevent.stop="cancel">Скасувати</el-button>
+				<el-button @click.prevent.stop="cancel">Назад</el-button>
 			</el-form-item> 
 		</el-form>
 	</el-card>

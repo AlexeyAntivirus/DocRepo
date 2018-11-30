@@ -51,7 +51,7 @@
 			</el-form-item>
 			<el-form-item>
 				<el-button type="primary" @click.native.stop.prevent="submitFinally">{{submitButtonText}}</el-button>
-				<el-button @click.native.stop.prevent="cancel">Відмінити</el-button>
+				<el-button @click.native.stop.prevent="cancel">Назад</el-button>
 			</el-form-item>
 		</el-form>
 	</el-card>

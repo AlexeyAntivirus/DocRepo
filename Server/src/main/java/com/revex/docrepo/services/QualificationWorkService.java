@@ -434,7 +434,7 @@ public class QualificationWorkService {
 	                           int beginYear,
 	                           int endYear,
 	                           HttpServletResponse response) {
-		List<ReportEntry> bachelor = parameterJdbcTemplate.query(
+		Set<QualificationWork> bachelor = parameterJdbcTemplate.query(
 				"SELECT kd.id, kd.rik1, kd.rik2, kd.sem, predm.id AS disciplineId, predm.nazva AS disciplineName, " +
 						"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId, " +
 						"       groups.nazva AS groupName, prep.id AS teacherId, " +
@@ -457,10 +457,12 @@ public class QualificationWorkService {
 						.addValue("beginYear", beginYear)
 						.addValue("endYear", endYear)
 						.addValue("workType", type.getNumber()),
-				reportEntryMapper
+				mapper
 		);
 
-		List<ReportEntry> master = parameterJdbcTemplate.query(
+
+
+		Set<QualificationWork> master = parameterJdbcTemplate.query(
 				"SELECT kd.id, kd.rik1, kd.rik2, kd.sem, predm.id AS disciplineId, predm.nazva AS disciplineName, " +
 						"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId, " +
 						"       groups.nazva AS groupName, prep.id AS teacherId, " +
@@ -483,7 +485,7 @@ public class QualificationWorkService {
 						.addValue("beginYear", beginYear)
 						.addValue("endYear", endYear)
 						.addValue("workType", type.getNumber()),
-				reportEntryMapper
+				mapper
 		);
 
 		this.reportService.generateReport(educationProgram, beginYear, endYear, type, bachelor, master, response);

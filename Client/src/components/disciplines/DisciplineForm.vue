@@ -21,7 +21,7 @@
 			</el-form-item>
 			<el-form-item>
 				<el-button type="primary" @click.native.stop.prevent="submitFinally">{{submitButtonText}}</el-button>
-				<el-button @click.native.stop.prevent="cancel">Відмінити</el-button>
+				<el-button @click.native.stop.prevent="cancel">Назад</el-button>
 			</el-form-item>
 		</el-form>
 	</el-card>
@@ -30,8 +30,7 @@
 <script lang="tsx">
 	import Vue from "vue"
 	import {Component, Prop, Watch} from "vue-property-decorator"
-	import {Discipline, validateString} from "../../entities/entities"
-	// import {Discipline, DisciplineModel, validateObjectRequired, validateString} from "../../entities/entities"
+	import {Discipline, validateString} from "@/entities/entities"
 
 	@Component({
 		name: "DisciplineForm"

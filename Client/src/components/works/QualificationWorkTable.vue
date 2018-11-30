@@ -30,6 +30,10 @@
 							<el-icon name="search"></el-icon>
 							Отримати дані
 						</el-button>
+						<el-button size="mini" type="primary" @click="$router.push({name: 'Report'})">
+							<el-icon name="document"></el-icon>
+							Створити звіт
+						</el-button>
 						<el-button size="mini" type="success" @click="$router.push({name: 'InsertQualificationWork'})">
 							<el-icon name="plus"></el-icon>
 							Додати роботу

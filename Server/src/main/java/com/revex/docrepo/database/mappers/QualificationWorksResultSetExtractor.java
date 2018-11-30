@@ -48,6 +48,18 @@ public class QualificationWorksResultSetExtractor implements ResultSetExtractor<
 				long groupId = rs.getLong("groupId");
 				long studentId = rs.getLong("studentId");
 
+				Integer pagenum = rs.getInt("pagenum");
+
+				if (rs.wasNull()) {
+					pagenum = null;
+				}
+
+				Integer slidenum = rs.getInt("slidenum");
+
+				if (rs.wasNull()) {
+					slidenum = null;
+				}
+
 				builder.id(qualificationWorkId)
 						.beginYear(rs.getInt("rik1"))
 						.endYear(rs.getInt("rik2"))
@@ -93,7 +105,9 @@ public class QualificationWorksResultSetExtractor implements ResultSetExtractor<
 						.courseNumber(rs.getInt("kurs"))
 						.isShortened(rs.getInt("skor") == 1)
 						.isExtramural(rs.getInt("zao") == 1)
-						.groupName(rs.getString("groupn"));
+						.groupName(rs.getString("groupn"))
+						.documentNumber(pagenum)
+						.slideNumber(slidenum);
 			}
 
 			long teacherId = rs.getLong("teacherId");
