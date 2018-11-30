@@ -67,7 +67,7 @@ public class QualificationWorkService {
 						"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId, " +
 						"       groups.nazva AS groupName, prep.id AS teacherId, " +
 						"       kd.tema, kd.kd, kd.papka, kd.ocenka, kd.spec, kd.okr, kd.op, kd.groupn, kd.kurs, " +
-						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker " +
+						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker, kd.pagenum, kd.slidenum  " +
 						"FROM kd " +
 						"LEFT OUTER JOIN kerivniki on kerivniki.idrab = kd.id " +
 						"LEFT OUTER JOIN prep on kerivniki.idprep = prep.id " +
@@ -88,7 +88,7 @@ public class QualificationWorkService {
 						"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId, " +
 						"       groups.nazva AS groupName, prep.id AS teacherId, " +
 						"       kd.tema, kd.kd, kd.papka, kd.ocenka, kd.spec, kd.okr, kd.op, kd.groupn, kd.kurs, " +
-						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker " +
+						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker, kd.pagenum, kd.slidenum  " +
 						"FROM kd " +
 						"LEFT OUTER JOIN kerivniki on kerivniki.idrab = kd.id " +
 						"LEFT OUTER JOIN prep on kerivniki.idprep = prep.id " +
@@ -229,7 +229,7 @@ public class QualificationWorkService {
 						"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId, " +
 						"       groups.nazva AS groupName, prep.id AS teacherId, " +
 						"       kd.tema, kd.kd, kd.papka, kd.ocenka, kd.spec, kd.okr, kd.op, kd.groupn, kd.kurs, " +
-						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker " +
+						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker, kd.pagenum, kd.slidenum " +
 						"FROM kd " +
 						"LEFT OUTER JOIN kerivniki on kerivniki.idrab = kd.id " +
 						"LEFT OUTER JOIN prep on kerivniki.idprep = prep.id " +
@@ -414,7 +414,7 @@ public class QualificationWorkService {
 						"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId, " +
 						"       groups.nazva AS groupName, prep.id AS teacherId, " +
 						"       kd.tema, kd.kd, kd.papka, kd.ocenka, kd.spec, kd.okr, kd.op, kd.groupn, kd.kurs, " +
-						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker " +
+						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker, kd.pagenum, kd.slidenum " +
 						"FROM kd " +
 						"LEFT OUTER JOIN kerivniki on kerivniki.idrab = kd.id " +
 						"LEFT OUTER JOIN prep on kerivniki.idprep = prep.id " +
