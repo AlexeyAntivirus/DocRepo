@@ -104,14 +104,23 @@ public class TeacherService {
 	}
 
 	public InsertNewTeacherResponsePayload insertNewTeacher(InsertNewTeacherRequestPayload payload) {
+		int pint = 0;
+
+		if (payload.getPosition().equals("завідувач кафедри")) pint = 5;
+		else if (payload.getPosition().equals("професор")) pint = 4;
+		else if (payload.getPosition().equals("доцент")) pint = 3;
+		else if (payload.getPosition().equals("старший викладач")) pint = 2;
+		else if (payload.getPosition().equals("асистент")) pint = 1;
+
 		int update = template.update(
-				"INSERT INTO prep (pib, kaf, stup, zvan, posada, diuchi) " +
-						"VALUES (:fullName, :cathedra, :degree, :rank, :position, :isWorking);",
+				"INSERT INTO prep (pib, kaf, stup, zvan, posada, posada_int, diuchi) " +
+						"VALUES (:fullName, :cathedra, :degree, :rank, :position, :position_int, :isWorking);",
 				new MapSqlParameterSource()
 						.addValue("fullName", payload.getFullName())
 						.addValue("cathedra", payload.getCathedra())
 						.addValue("position", payload.getPosition())
 						.addValue("degree", payload.getDegree())
+						.addValue("position_int", pint)
 						.addValue("rank", payload.getRank())
 						.addValue("isWorking", payload.isWorking() ? 1 : 0)
 		);
@@ -131,15 +140,24 @@ public class TeacherService {
 	}
 
 	public UpdateTeacherByParamResponsePayload updateTeacherByParam(UpdateTeacherByParamRequestPayload payload) {
+		int pint = 0;
+
+		if (payload.getPosition().equals("завідувач кафедри")) pint = 5;
+		else if (payload.getPosition().equals("професор")) pint = 4;
+		else if (payload.getPosition().equals("доцент")) pint = 3;
+		else if (payload.getPosition().equals("старший викладач")) pint = 2;
+		else if (payload.getPosition().equals("асистент")) pint = 1;
+
 		int update = template.update(
 				"UPDATE prep\n" +
-						"   SET pib=:fullName, kaf=:cathedra, stup=:degree, zvan=:rank, posada=:position, diuchi=:isWorking\n" +
+						"   SET pib=:fullName, kaf=:cathedra, stup=:degree, zvan=:rank, posada=:position, posada_int=:position_int, diuchi=:isWorking\n" +
 						" WHERE id=:id;",
 				new MapSqlParameterSource()
 						.addValue("id", payload.getId())
 						.addValue("fullName", payload.getFullName())
 						.addValue("cathedra", payload.getCathedra())
 						.addValue("position", payload.getPosition())
+						.addValue("position_int", pint)
 						.addValue("degree", payload.getDegree())
 						.addValue("rank", payload.getRank())
 						.addValue("isWorking", payload.isWorking() ? 1 : 0)

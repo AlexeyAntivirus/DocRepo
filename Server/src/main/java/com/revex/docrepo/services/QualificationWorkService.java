@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -127,17 +128,29 @@ public class QualificationWorkService {
 		);
 
 		Path targetPath = null;
+		String docName = null;
+		String pptName = null;
+		List<String> fileNames = new ArrayList<>();
 
 		targetPath = documentUploadingService.uploadFile(options, doc);
 		int pagenum = this.reportService.getLength(targetPath.resolve(doc.getOriginalFilename()));
-		targetPath = documentUploadingService.uploadFile(options, ppt);
-		int slidenum = this.reportService.getLength(targetPath.resolve(ppt.getOriginalFilename()));
+		docName = doc.getOriginalFilename();
+
+		int slidenum = 0;
+		if (insertNewQualificationWorkRequestPayload.getWorkType() == QualificationWorkType.DIPLOMA_WORK) {
+			targetPath = documentUploadingService.uploadFile(options, ppt);
+			slidenum = this.reportService.getLength(targetPath.resolve(ppt.getOriginalFilename()));
+			pptName = ppt.getOriginalFilename();
+		}
 
 		for (MultipartFile file : files) {
 			targetPath = documentUploadingService.uploadFile(options, file);
+			fileNames.add(file.getOriginalFilename());
 		}
 
-		documentUploadingService.createCheckInfo(targetPath, doc, ppt, files);
+		documentUploadingService.createCheckInfo(
+				insertNewQualificationWorkRequestPayload.getWorkType(),
+				targetPath, docName, pptName, fileNames);
 
 		MapSqlParameterSource sqlParameterSource = new MapSqlParameterSource()
 				.addValue("beginYear", insertNewQualificationWorkRequestPayload.getBeginYear())
@@ -281,49 +294,9 @@ public class QualificationWorkService {
 
 		Integer pagenum = null;
 		Integer slidenum = null;
-
-		if (doc != null && !doc.isEmpty()) {
-			if (node != null) {
-				Path docPath = targetPath.resolve(node.get("doc").asText());
-				if (Files.exists(docPath)) {
-					this.documentUploadingService.deleteFile(docPath);
-				}
-			}
-
-			targetPath = this.documentUploadingService.uploadFile(options, doc);
-			pagenum = this.reportService.getLength(targetPath.resolve(doc.getOriginalFilename()));
-		}
-
-		if (ppt != null && !ppt.isEmpty()) {
-			if (node != null) {
-				Path pptPath = targetPath.resolve(node.get("ppt").asText());
-				if (Files.exists(pptPath)) {
-					this.documentUploadingService.deleteFile(pptPath);
-				}
-			}
-
-			targetPath = this.documentUploadingService.uploadFile(options, ppt);
-			slidenum = this.reportService.getLength(targetPath.resolve(ppt.getOriginalFilename()));
-		}
-
-		if (files != null && !files.isEmpty()) {
-			if (node != null) {
-				ArrayNode nodes = (ArrayNode) node.get("files");
-
-				for (JsonNode element: nodes) {
-					Path filePath = targetPath.resolve(element.asText());
-					if (Files.exists(filePath)) {
-						this.documentUploadingService.deleteFile(filePath);
-					}
-				}
-			}
-
-			for (MultipartFile file: files) {
-				targetPath = this.documentUploadingService.uploadFile(options, file);
-			}
-		}
-
-		documentUploadingService.createCheckInfo(targetPath, doc, ppt, files);
+		String docName = null;
+		String pptName = null;
+		List<String> fileNames = new ArrayList<>();
 
 		MapSqlParameterSource sqlParameterSource = new MapSqlParameterSource()
 				.addValue("id", updateQualificationWorkRequestPayload.getId())
@@ -351,25 +324,91 @@ public class QualificationWorkService {
 				.addValue("slidenum", slidenum)
 				.addValue("pagenum", pagenum);
 
-		StringBuilder builder = new StringBuilder()
-				.append("UPDATE kd").append("\n")
-				.append("SET rik1=:beginYear, rik2=:endYear, sem=:semesterNumber, ").append("\n")
-				.append("studid=:studentId, tema=:title, kd=:workType, ").append("\n")
-				.append(" predmid=:disciplineId, ");
-
 		if (work.getWorkType() == QualificationWorkType.COURSE_WORK) {
 			if (updateQualificationWorkRequestPayload.getWorkType() == QualificationWorkType.DIPLOMA_WORK) {
 				sqlParameterSource.addValue("disciplineId", null);
 			} else {
 				sqlParameterSource.addValue("disciplineId", updateQualificationWorkRequestPayload.getDiscipline().getId());
 			}
-		} else {
+		} else if (work.getWorkType() == QualificationWorkType.DIPLOMA_WORK) {
 			if (updateQualificationWorkRequestPayload.getWorkType() == QualificationWorkType.COURSE_WORK) {
 				sqlParameterSource.addValue("disciplineId", updateQualificationWorkRequestPayload.getDiscipline().getId());
 			} else {
 				sqlParameterSource.addValue("disciplineId", null);
 			}
 		}
+
+		boolean switchedFromCourseWorkToDiploma = work.getWorkType() == QualificationWorkType.COURSE_WORK
+				&& updateQualificationWorkRequestPayload.getWorkType() == QualificationWorkType.DIPLOMA_WORK;
+		boolean switchedFromDiplomaToCourseWork = work.getWorkType() == QualificationWorkType.DIPLOMA_WORK
+				&& updateQualificationWorkRequestPayload.getWorkType() == QualificationWorkType.COURSE_WORK;
+
+		if (node != null) {
+			if (switchedFromCourseWorkToDiploma) {
+				Path docPath = targetPath.resolve(node.get("ppt").asText());
+				if (Files.exists(docPath)) {
+					this.documentUploadingService.deleteFile(docPath);
+				}
+			} else if (switchedFromDiplomaToCourseWork) {
+				if (ppt != null && !ppt.isEmpty()) {
+					targetPath = this.documentUploadingService.uploadFile(options, ppt);
+					pagenum = this.reportService.getLength(targetPath.resolve(ppt.getOriginalFilename()));
+					pptName = ppt.getOriginalFilename();
+				}
+			} else {
+				if (ppt != null && !ppt.isEmpty()) {
+					Path docPath = targetPath.resolve(node.get("ppt").asText());
+					if (Files.exists(docPath)) {
+						this.documentUploadingService.deleteFile(docPath);
+					}
+
+					targetPath = this.documentUploadingService.uploadFile(options, ppt);
+					slidenum = this.reportService.getLength(targetPath.resolve(ppt.getOriginalFilename()));
+					pptName = ppt.getOriginalFilename();
+				}
+			}
+		}
+
+		if (doc != null && !doc.isEmpty()) {
+			if (node != null) {
+				Path pptPath = targetPath.resolve(node.get("doc").asText());
+				if (Files.exists(pptPath)) {
+					this.documentUploadingService.deleteFile(pptPath);
+				}
+			}
+
+			targetPath = this.documentUploadingService.uploadFile(options, doc);
+			pagenum = this.reportService.getLength(targetPath.resolve(doc.getOriginalFilename()));
+			docName = doc.getOriginalFilename();
+		}
+
+		if (files != null && !files.isEmpty()) {
+			if (node != null) {
+				ArrayNode nodes = (ArrayNode) node.get("files");
+
+				for (JsonNode element: nodes) {
+					Path filePath = targetPath.resolve(element.asText());
+					if (Files.exists(filePath)) {
+						this.documentUploadingService.deleteFile(filePath);
+					}
+				}
+			}
+
+			for (MultipartFile file: files) {
+				targetPath = this.documentUploadingService.uploadFile(options, file);
+				fileNames.add(file.getOriginalFilename());
+			}
+		}
+
+		documentUploadingService.updateCheckInfo(
+				updateQualificationWorkRequestPayload.getWorkType(),
+				targetPath, docName, pptName, fileNames);
+
+		StringBuilder builder = new StringBuilder()
+				.append("UPDATE kd").append("\n")
+				.append("SET rik1=:beginYear, rik2=:endYear, sem=:semesterNumber, ").append("\n")
+				.append("studid=:studentId, tema=:title, kd=:workType, ").append("\n")
+				.append(" predmid=:disciplineId, ");
 
 		builder = builder.append("papka=:workFilePath, ocenka=:grade, spec=:specialty, okr=:educationLevel, ").append("\n")
 				.append("op=:educationProgram, groupn=:groupName, kurs=:courseNumber, fak=:faculty, ").append("\n")
@@ -459,8 +498,6 @@ public class QualificationWorkService {
 						.addValue("workType", type.getNumber()),
 				mapper
 		);
-
-
 
 		Set<QualificationWork> master = parameterJdbcTemplate.query(
 				"SELECT kd.id, kd.rik1, kd.rik2, kd.sem, predm.id AS disciplineId, predm.nazva AS disciplineName, " +

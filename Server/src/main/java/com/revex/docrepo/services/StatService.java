@@ -22,14 +22,7 @@ public class StatService {
 
 	public StatResponsePayload getStat(StatRequestPayload payload) {
 		return template.queryForObject(
-				"SELECT * FROM get_stat(" +
-						":beginYear, " +
-						":endYear, " +
-						":workType, " +
-						":cathedra, " +
-						":faculty, " +
-						":specialty, " +
-						":teacherId)",
+				"SELECT * FROM get_stat(:beginYear, :endYear, :workType, :cathedra, :faculty, :specialty, :teacherId)",
 				new MapSqlParameterSource()
 					.addValue("workType", payload.getWorkType().getNumber())
 					.addValue("beginYear", payload.getBeginYear())

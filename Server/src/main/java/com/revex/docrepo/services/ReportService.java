@@ -84,12 +84,17 @@ public class ReportService {
 				HWPFDocument wordDoc = new HWPFDocument(s);
 
 				result = wordDoc.getSummaryInformation().getPageCount();
+				wordDoc.close();
 			} else if (extension.equals("docx")) {
 				XWPFDocument docx = new XWPFDocument(POIXMLDocument.openPackage(file.toString()));
 
 				result = docx.getProperties().getExtendedProperties().getUnderlyingProperties().getPages();
+				docx.close();
 			} else if (extension.matches("pptx?")) {
-				result = getSlideShowByExtension(file).getSlides().size();
+				SlideShow<?, ?> slideShowByExtension = getSlideShowByExtension(file);
+				result = slideShowByExtension.getSlides().size();
+
+				slideShowByExtension.close();
 			}
 
 			return result;

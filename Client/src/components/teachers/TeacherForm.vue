@@ -5,7 +5,13 @@
 				<el-input size="small" v-model="value.fullName"/>
 			</el-form-item>
 			<el-form-item size="small" prop="position" label="Посада: ">
-				<el-input size="small" v-model="value.position"/>
+				<el-select size="small" v-model="value.position">
+					<el-option :key="'асистент'" :label="'Асистент'" :value="'асистент'"/>
+					<el-option :key="'старший викладач'" :label="'Старший викладач'" :value="'старший викладач'"/>
+					<el-option :key="'доцент'" :label="'Доцент'" :value="'доцент'"/>
+					<el-option :key="'професор'" :label="'Професор'" :value="'професор'"/>
+					<el-option :key="'завідувач кафедри'" :label="'Завідувач кафедри'" :value="'завідувач кафедри'"/>
+				</el-select>
 			</el-form-item>
 			<el-form-item size="small" prop="cathedra" label="Кафедра: ">
 				<el-input size="small" v-model="value.cathedra"/>

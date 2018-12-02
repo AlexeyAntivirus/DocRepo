@@ -67,9 +67,9 @@ public class QualificationWorkController {
 	@ResponseBody
 	public InsertNewQualificationWorkResponsePayload insertNewQualificationWork(
 			@RequestPart("info") String payload,
-			@RequestPart("doc") MultipartFile doc,
-			@RequestPart("ppt") MultipartFile ppt,
-			@RequestPart("files") List<MultipartFile> files) throws IOException {
+			@RequestPart(name = "doc") MultipartFile doc,
+			@RequestPart(name = "ppt") MultipartFile ppt,
+			@RequestPart(name = "files", required = false) List<MultipartFile> files) throws IOException {
 
 		ObjectMapper mapper = new ObjectMapper();
 		InsertNewQualificationWorkRequestPayload insertNewQualificationWorkRequestPayload
@@ -81,9 +81,9 @@ public class QualificationWorkController {
 	@ResponseBody
 	public UpdateQualificationWorkResponsePayload updateQualificationWork(
 			@RequestPart("info") String payload,
-			@RequestPart("doc") MultipartFile doc,
-			@RequestPart("ppt") MultipartFile ppt,
-			@RequestPart("files") List<MultipartFile> files) throws IOException {
+			@RequestPart(name = "doc", required = false) MultipartFile doc,
+			@RequestPart(name = "ppt", required = false) MultipartFile ppt,
+			@RequestPart(name = "files", required = false) List<MultipartFile> files) throws IOException {
 
 		ObjectMapper mapper = new ObjectMapper();
 		UpdateQualificationWorkRequestPayload insertNewQualificationWorkRequestPayload

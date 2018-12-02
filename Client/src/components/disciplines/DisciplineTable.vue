@@ -74,7 +74,7 @@
 		private selectedDiscipline: Discipline | null = null
 
 		private searchForm: Vue | null = null
-		private tableHeight: number = this.$resizeWatcher.height - 192
+		private tableHeight: number = this.$resizeWatcher.height - 212
 
 		private isXs: boolean
 
@@ -98,7 +98,7 @@
 		private calculateTableSize(size: WindowSize, searchForm: HTMLElement): number {
 			console.log("WIn: " + size.actualHeight)
 			console.log("WIn: " + searchForm.offsetHeight)
-			return size.actualHeight - searchForm.offsetHeight - 143
+			return size.actualHeight - searchForm.offsetHeight - 192
 		}
 
 		private select(discipline: Discipline) {

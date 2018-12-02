@@ -124,10 +124,10 @@
 				<el-select size="small" v-model="value.gradeNational"
 				           @change="onGradeNationalChanged"
 				           placeholder="Select">
-					<el-option value="відмінно" label="відмінно"/>
-					<el-option value="добре" label="добре"/>
-					<el-option value="задовільно" label="задовільно"/>
-					<el-option value="не задовільно" label="не задовільно"/>
+					<el-option key="відмінно" value="відмінно" label="відмінно"/>
+					<el-option key="добре" value="добре" label="добре"/>
+					<el-option key="задовільно" value="задовільно" label="задовільно"/>
+					<el-option key="не задовільно" value="не задовільно" label="не задовільно"/>
 				</el-select>
 			</el-form-item>
 			<el-form-item prop="documentFile" label="Файл пояснювальної записки">
@@ -135,7 +135,7 @@
 				       accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
 				       @change="addDocumentFile"/>
 			</el-form-item>
-			<el-form-item prop="presentationFile" label="Файл презентації">
+			<el-form-item v-if="value.workType !== 'Курсова'"  prop="presentationFile" label="Файл презентації">
 				<input ref="presentationFileInput" type="file" @change="addPresentationFile"
 						accept="application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"/>
 			</el-form-item>
@@ -409,6 +409,21 @@
 			this.value.educationLevel = ""
 			this.value.specialty = ""
 			this.value.educationProgram = ""
+
+			let input = this.$refs.documentFileInput as HTMLInputElement
+
+			input.files = null
+			input.value = ""
+
+			input = this.$refs.presentationFileInput as HTMLInputElement
+
+			input.files = null
+			input.value = ""
+
+			input = this.$refs.additionFilesInput as HTMLInputElement
+
+			input.files = null
+			input.value = ""
 		}
 
 		private addAdditionFiles(a: Event) {
@@ -498,6 +513,7 @@
 		}
 
 		private resetFileInput(input: HTMLInputElement) {
+			console.log(input)
 			input.files = null
 			input.value = ""
 		}

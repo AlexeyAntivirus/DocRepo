@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.revex.docrepo.database.utils.QualificationWorkType;
 import com.revex.docrepo.exceptions.DocRepoFileNotDeletedException;
 import com.revex.docrepo.exceptions.DocRepoFileNotUploadedException;
 import com.revex.docrepo.exceptions.DocRepoFilesProblemException;
@@ -60,12 +61,9 @@ public class DocumentUploadingService {
 
 	public Path uploadFile(UploadFileOptions options, MultipartFile file) {
 		String relativeDirectoryPath = options.toString();
-
 		Path absoluteDirectoryPath = docsFilePath.resolve(relativeDirectoryPath).normalize();
-
 		Path relativeFilePath = Paths.get(relativeDirectoryPath, file.getOriginalFilename()).normalize();
 		Path absoluteFilePath = docsFilePath.resolve(relativeFilePath);
-
 		Path sanitizedPath = this.sanitizeFile(absoluteDirectoryPath, absoluteFilePath);
 
 		try {
@@ -84,26 +82,65 @@ public class DocumentUploadingService {
 		}
 	}
 
-	public void createCheckInfo(Path docsFilePath,
-								MultipartFile doc,
-	                            MultipartFile ppt,
-	                            List<MultipartFile> files) {
+	public void createCheckInfo(QualificationWorkType workType,
+	                            Path docsFilePath,
+	                            String docName,
+	                            String pptName,
+	                            List<String> fileNames) {
 		ObjectMapper mapper = new ObjectMapper();
 
 		ObjectNode node = mapper.createObjectNode()
-				.put("doc", doc.getOriginalFilename())
-				.put("ppt", ppt.getOriginalFilename());
+				.put("doc", docName);
+		if (workType == QualificationWorkType.DIPLOMA_WORK) {
+			node = node.put("ppt", pptName);
+		}
+
 		ArrayNode filesNode = mapper.createArrayNode();
 
-		for (MultipartFile file: files) {
-			filesNode = filesNode.add(file.getOriginalFilename());
+		for (String file: fileNames) {
+			filesNode = filesNode.add(file);
 		}
 
 		node = (ObjectNode) node.set("files", filesNode);
-
 		ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
 
 		try {
+			writer.writeValue(Files.newOutputStream(docsFilePath.resolve("check-info.json")), node);
+		} catch (IOException e) {
+			throw new DocRepoFilesProblemException("Cannot create check-info.json", e);
+		}
+	}
+
+	public void updateCheckInfo(QualificationWorkType workType, Path docsFilePath, String doc, String ppt, List<String> files) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		try {
+			ObjectReader reader = mapper.reader();
+
+			ObjectNode node = (ObjectNode) reader.readTree(Files.newInputStream(docsFilePath.resolve("check-info.json")));
+
+			if (doc != null && !doc.isEmpty()) {
+				node.set("doc", mapper.valueToTree(doc));
+			}
+
+			if (ppt != null && !ppt.isEmpty()) {
+				node.set("ppt", workType == QualificationWorkType.DIPLOMA_WORK
+						? mapper.valueToTree(ppt)
+						: null);
+			}
+
+			if (!files.isEmpty()) {
+				ArrayNode filesNode = mapper.createArrayNode();
+
+				for (String file: files) {
+					filesNode = filesNode.add(file);
+				}
+
+				node.set("files", filesNode);
+			}
+
+			ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+
 			writer.writeValue(Files.newOutputStream(docsFilePath.resolve("check-info.json")), node);
 		} catch (IOException e) {
 			throw new DocRepoFilesProblemException("Cannot create check-info.json", e);
@@ -120,10 +157,6 @@ public class DocumentUploadingService {
 		} catch (IOException e) {
 			throw new DocRepoFilesProblemException("Cannot read check-info.json", e);
 		}
-	}
-
-	public boolean isCheckInfoExists(Path docsFilePath) {
-		return Files.exists(docsFilePath.resolve("check-info.json"));
 	}
 
 	public void deleteFile(Path path) {
