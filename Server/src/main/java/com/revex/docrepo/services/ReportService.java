@@ -1,77 +1,39 @@
 package com.revex.docrepo.services;
 
 import com.revex.docrepo.database.entities.QualificationWork;
-import com.revex.docrepo.database.utils.QualificationWorkType;
-import com.revex.docrepo.database.utils.ReportEntry;
+import com.revex.docrepo.database.views.DisciplineView;
 import com.revex.docrepo.exceptions.DocRepoFilesProblemException;
+import com.revex.docrepo.utils.report.ReportConstructor;
+import com.revex.docrepo.utils.report.ReportDocumentStyle;
+import com.revex.docrepo.utils.report.ReportParagraph;
+import com.revex.docrepo.utils.report.ReportParagraphRun;
+import com.revex.docrepo.utils.report.ReportTable;
+import com.revex.docrepo.utils.report.ReportTableCell;
+import com.revex.docrepo.utils.report.ReportTableRow;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.POIXMLDocument;
 import org.apache.poi.hslf.usermodel.HSLFSlideShow;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.sl.usermodel.SlideShow;
-import org.apache.poi.util.LocaleUtil;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
-import org.apache.poi.xwpf.usermodel.TextAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
-import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageMar;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSectPr;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 @Service
 public class ReportService {
-
-	public void generateReport(String educationProgram,
-	                           int beginYear,
-	                           int endYear,
-	                           QualificationWorkType workType,
-	                           Set<QualificationWork> bachelorReportEntries,
-	                           Set<QualificationWork> masterReportEntries,
-	                           HttpServletResponse response) {
-		try (OutputStream outputStream = response.getOutputStream()) {
-			response.addHeader("Content-Disposition", "attachment; filename=report.docx");
-			response.setContentType("application/octet-stream");
-
-			XWPFDocument document = new XWPFDocument();
-			CTSectPr sectPr = document.getDocument().getBody().addNewSectPr();
-			CTPageMar pgMar = sectPr.addNewPgMar();
-			pgMar.setTop(BigInteger.valueOf(1440));
-			pgMar.setBottom(BigInteger.valueOf(1440));
-			pgMar.setLeft(BigInteger.valueOf(720));
-			pgMar.setRight(BigInteger.valueOf(720));
-			LocaleUtil.setUserLocale(new Locale("uk", "UA"));
-			document.createStyles().setSpellingLanguage("uk-UA");
-
-			this.generateMainTitle(document, beginYear, endYear, educationProgram);
-			this.setParagraph(document.createParagraph(), ParagraphAlignment.CENTER,
-					"Магістри", 14, true, true);
-			this.generateTable(document, masterReportEntries, workType);
-			this.setParagraph(document.createParagraph(), ParagraphAlignment.CENTER,
-					"Бакалаври", 14, true, true);
-			this.generateTable(document, bachelorReportEntries, workType);
-
-			document.write(outputStream);
-		} catch (IOException e) {
-			throw new DocRepoFilesProblemException("Report cannot be generated");
-		}
-	}
 
 	public int getLength(Path file) {
 		int result = 0;
@@ -90,11 +52,15 @@ public class ReportService {
 
 				result = docx.getProperties().getExtendedProperties().getUnderlyingProperties().getPages();
 				docx.close();
-			} else if (extension.matches("pptx?")) {
-				SlideShow<?, ?> slideShowByExtension = getSlideShowByExtension(file);
+			} else if (extension.matches("ppt")) {
+				InputStream s = Files.newInputStream(file);
+				SlideShow<?, ?> slideShowByExtension = new HSLFSlideShow(s);
 				result = slideShowByExtension.getSlides().size();
 
 				slideShowByExtension.close();
+			} else if (extension.matches("pptx")) {
+				SlideShow<?, ?> slideShow = new XMLSlideShow(POIXMLDocument.openPackage(file.toString()));
+				result = slideShow.getSlides().size();
 			}
 
 			return result;
@@ -103,105 +69,437 @@ public class ReportService {
 		}
 	}
 
-	private SlideShow<?, ?> getSlideShowByExtension(Path filePath) throws IOException {
-		String fileName = filePath.getFileName().toString();
-		String extension = FilenameUtils.getExtension(fileName);
+	public void generateReportForDiplomaWorks(String educationProgram,
+	                                          int beginYear,
+	                                          int endYear,
+	                                          Set<QualificationWork> bachelor,
+	                                          Set<QualificationWork> master,
+	                                          HttpServletResponse response) {
+		ReportConstructor constructor = ReportConstructor.createDocument()
+				.styleDocument(ReportDocumentStyle.builder()
+						.locale(new Locale("uk", "UA"))
+						.top(1440)
+						.bottom(1440)
+						.left(720)
+						.right(720)
+						.build());
 
-		SlideShow<?, ?> result = null;
+		constructor = constructor.createParagraph(ReportParagraph.builder()
+				.horizontalAlignment(ParagraphAlignment.CENTER)
+				.spacingAfter(0)
+				.run(ReportParagraphRun.builder()
+						.isBold(true)
+						.isAddBreak(true)
+						.text("Опис дипломних проектів (робіт), котрі були захищені  В ДЕК № 1")
+						.build())
+				.run(ReportParagraphRun.builder()
+						.isBold(true)
+						.isAddBreak(true)
+						.text("(" + educationProgram + ")")
+						.build())
+				.run(ReportParagraphRun.builder()
+						.isBold(true)
+						.isAddBreak(true)
+						.text("в " + beginYear + "/" + endYear + " навчальному році")
+						.build())
+				.build());
 
-		if (extension.equals("ppt")) {
-			InputStream s = Files.newInputStream(filePath);
-			result = new HSLFSlideShow(s);
-		} else if (extension.equals("pptx")) {
-			result = new XMLSlideShow(POIXMLDocument.openPackage(filePath.toString()));
-		}
+		constructor = constructor.createParagraph(ReportParagraph.builder()
+				.horizontalAlignment(ParagraphAlignment.CENTER)
+				.spacingAfter(0)
+				.run(ReportParagraphRun.builder()
+						.isBold(true)
+						.isAddBreak(true)
+						.text("Бакалаври")
+						.build())
+				.build());
 
-		return result;
+		ReportTable.ReportTableBuilder bachelorTable = ReportTable.builder()
+				.rowCount(bachelor.size() + 1)
+				.columnCount(5)
+				.width(18 * 1440);
+
+		ReportTableRow header = this.createDiplomaHeaderRow();
+
+		List<ReportTableRow> bachelorRows = this.createDiplomaRows(bachelor);
+		bachelorRows.add(0, header);
+		bachelorTable.rows(bachelorRows);
+
+		constructor = constructor.createTable(bachelorTable.build());
+
+		constructor = constructor.createParagraph(ReportParagraph.builder()
+				.horizontalAlignment(ParagraphAlignment.CENTER)
+				.spacingAfter(0)
+				.run(ReportParagraphRun.builder()
+						.isBold(true)
+						.isAddBreak(true)
+						.text("Магистри")
+						.build())
+				.build());
+
+		ReportTable.ReportTableBuilder masterTable = ReportTable.builder()
+				.rowCount(master.size() + 1)
+				.columnCount(5)
+				.width(18 * 1440);
+
+		List<ReportTableRow> rows = this.createDiplomaRows(master);
+		rows.add(0, header);
+		masterTable.rows(rows);
+
+		constructor = constructor.createTable(masterTable.build());
+		this.write(constructor, response);
 	}
 
-	private void generateMainTitle(XWPFDocument document, int beginYear, int endYear, String educationalProgram) {
-		this.setParagraph(document.createParagraph(), ParagraphAlignment.LEFT,
-				"Опис дипломних проектів (робіт)\n" +
-				"(" + educationalProgram + ")\n" +
-				"за " + beginYear + "/" + endYear + " роки\n",
-				14, true, true);
-	}
+	public void generateReportForCourseWorks(String educationProgram,
+	                                         Set<QualificationWork> master,
+	                                         HttpServletResponse response) {
+		ReportConstructor constructor = ReportConstructor.createDocument()
+				.styleDocument(ReportDocumentStyle.builder()
+						.locale(new Locale("uk", "UA"))
+						.top(1440)
+						.bottom(1440)
+						.left(720)
+						.right(720)
+						.build());
 
-	private void generateTable(XWPFDocument document, Set<QualificationWork> entries, QualificationWorkType workType) {
-		XWPFTable table = document.createTable(entries.size() + 1, workType == QualificationWorkType.DIPLOMA_WORK ? 5 : 4);
-		table.setWidth(16 * 1440);
+		DisciplineView discipline = DisciplineView.builder().id(0).shortName("").build();
+		ReportTable.ReportTableBuilder reportTableBuilder = ReportTable.builder();
+		int descriptionNum = 0;
+		int beginYear = 0;
+		int endYear = 0;
 
-		XWPFTableRow row = table.getRow(0);
+		boolean isNeedToCreateNewTable;
 
-		this.setCell(row.getCell(0), "№", 1440, true);
-		this.setCell(row.getCell(1), "ПІБ", 5 * 1440, true);
-		this.setCell(row.getCell(2), "Тема роботи", 8 * 1440, true);
-		this.setCell(row.getCell(3),"Розрахунково-\n" +
-				"пояснювальна\n" +
-				"записка, стр.\n", 2 * 1440, true);
-		if (workType == QualificationWorkType.DIPLOMA_WORK) {
-			this.setCell(row.getCell(4),"Графічна частина,\n" +
-					"листів\n", 1440, true);
-		}
+		int index = 0;
+		int work = 1;
 
-		int index = 1;
-		for (QualificationWork entry: entries) {
-			XWPFTableRow row1 = table.getRow(index);
+		for (QualificationWork qualificationWork : master) {
+			isNeedToCreateNewTable = qualificationWork.getDiscipline().getId() != discipline.getId() ||
+					(qualificationWork.getBeginYear() != beginYear && qualificationWork.getEndYear() != endYear);
 
-			this.setCell(row1.getCell(0), (index) + "", 1440, false);
-			this.setCell(row1.getCell(1), entry.getTitle(), 5 * 1440, false);
-			this.setCell(row1.getCell(2), entry.getStudentFullName(), 6 * 1440, false);
-			this.setCell(row1.getCell(3), entry.getDocumentNumber() == null ? "" : entry.getDocumentNumber() + "", 1440, false);
-			if (workType == QualificationWorkType.DIPLOMA_WORK) {
-				this.setCell(row1.getCell(4),entry.getSlideNumber() == null ? "" : entry.getSlideNumber() + "", 1440, false);
+			if (isNeedToCreateNewTable) {
+				if (index > 0) {
+					reportTableBuilder.width(18 * 1440)
+							.rowCount(work)
+							.columnCount(4);
+					constructor = constructor.createTable(reportTableBuilder.build());
+
+					constructor = constructor.createParagraph(ReportParagraph.builder()
+							.isPageBreak(true)
+							.build());
+				}
+
+				discipline = qualificationWork.getDiscipline();
+				beginYear = qualificationWork.getBeginYear();
+				endYear = qualificationWork.getEndYear();
+				descriptionNum++;
+
+				constructor = constructor.createParagraph(ReportParagraph.builder()
+						.horizontalAlignment(ParagraphAlignment.LEFT)
+						.spacingAfter(0)
+						.run(ReportParagraphRun.builder()
+								.isAddBreak(true)
+								.text("Опис №" + descriptionNum)
+								.build())
+						.run(ReportParagraphRun.builder()
+								.isAddBreak(true)
+								.text("курсових робіт (проектів) студентів. Факультет \"" + qualificationWork.getFaculty() + "\"")
+								.build())
+						.run(ReportParagraphRun.builder()
+								.isAddBreak(true)
+								.text("Спеціальність - " + educationProgram +
+										", курс - " + qualificationWork.getCourseNumber() +
+										", група - " + qualificationWork.getGroupName() + ".")
+								.build())
+						.run(ReportParagraphRun.builder()
+								.isAddBreak(true)
+								.text("За дисципліною \"" + discipline.getShortName() +
+										"\", навчальний рік - " + beginYear + "/" + endYear +
+										", " + ((qualificationWork.getSemesterNumber() + 1) % 2 + 1) + "-й семестр")
+
+								.build())
+						.build());
+
+				reportTableBuilder = ReportTable.builder()
+						.row(this.createCourseHeaderRow());
+
+				work = 1;
 			}
+
+			reportTableBuilder.row(this.createCourseRow(work, qualificationWork));
 
 			index++;
+			work++;
+		}
+
+		reportTableBuilder.width(18 * 1440)
+				.columnCount(4)
+				.rowCount(work);
+		constructor = constructor.createTable(reportTableBuilder.build());
+
+		constructor = constructor.createParagraph(ReportParagraph.builder()
+				.isPageBreak(true)
+				.build());
+
+		this.write(constructor, response);
+	}
+
+	private void write(ReportConstructor constructor, HttpServletResponse response) {
+		try {
+			constructor.construct().write(response.getOutputStream());
+		} catch (IOException e) {
+			throw new DocRepoFilesProblemException("Could not create report");
 		}
 	}
 
-	private XWPFParagraph setParagraph(XWPFParagraph paragraph, ParagraphAlignment alignment, String text, int size, boolean isBold, boolean addBreak) {
-		paragraph.setAlignment(alignment);
-		paragraph.setVerticalAlignment(TextAlignment.CENTER);
-		paragraph.setWordWrapped(true);
-		paragraph.setSpacingAfter(0);
-
-		String[] split = text.split("\n");
-
-		if (split.length > 1) {
-			for (String element: split) {
-				XWPFRun run = paragraph.createRun();
-
-				run.setText(element);
-				run.setFontFamily("Times New Roman");
-				run.setFontSize(size);
-				run.setBold(isBold);
-
-				run.addBreak();
-			}
-		} else {
-			XWPFRun run = paragraph.createRun();
-
-			run.setText(text);
-			run.setFontFamily("Times New Roman");
-			run.setFontSize(size);
-			run.setBold(isBold);
-
-			if (addBreak) {
-				run.addBreak();
-			}
-		}
-
-		return paragraph;
+	private ReportTableRow createDiplomaHeaderRow() {
+		return ReportTableRow.builder()
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(1 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.text("№")
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(5.5 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.text("ПІБ студента")
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(7.5 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.text("Назва роботи")
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(2 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.isWordWrapped(true)
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.text("Розрахунково-пояснювальна записка, стр.")
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(2 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.isWordWrapped(true)
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.text("Графічна частина, листів")
+										.build())
+								.build())
+						.build())
+				.build();
 	}
 
-	private void setCell(XWPFTableCell cell, String text, double width, boolean isBold) {
-		cell.setParagraph(this.setParagraph(cell.getParagraphs().get(0), ParagraphAlignment.CENTER, text, 12, isBold, false));
-		cell.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
-		if (cell.getCTTc().getTcPr() == null)
-			cell.getCTTc().addNewTcPr();
-		if (cell.getCTTc().getTcPr().getTcW() == null)
-			cell.getCTTc().getTcPr().addNewTcW();
-		cell.getCTTc().getTcPr().getTcW().setW(BigDecimal.valueOf(width).toBigInteger());
+	private List<ReportTableRow> createDiplomaRows(Set<QualificationWork> works) {
+		List<ReportTableRow> rows = new ArrayList<>();
+		int index = 1;
+		for (QualificationWork masterWork : works) {
+			ReportTableRow row = ReportTableRow.builder()
+					.cell(ReportTableCell.builder()
+							.align(XWPFTableCell.XWPFVertAlign.CENTER)
+							.width(BigDecimal.valueOf(1 * 1440).toBigInteger())
+							.paragraph(ReportParagraph.builder()
+									.horizontalAlignment(ParagraphAlignment.CENTER)
+									.spacingAfter(0)
+									.run(ReportParagraphRun.builder()
+											.text(Integer.toString(index++))
+											.build())
+									.build())
+							.build())
+					.cell(ReportTableCell.builder()
+							.align(XWPFTableCell.XWPFVertAlign.CENTER)
+							.width(BigDecimal.valueOf(5.5 * 1440).toBigInteger())
+							.paragraph(ReportParagraph.builder()
+									.horizontalAlignment(ParagraphAlignment.CENTER)
+									.spacingAfter(0)
+									.run(ReportParagraphRun.builder()
+											.text(masterWork.getStudentFullName())
+											.build())
+									.build())
+							.build())
+					.cell(ReportTableCell.builder()
+							.align(XWPFTableCell.XWPFVertAlign.CENTER)
+							.width(BigDecimal.valueOf(7.5 * 1440).toBigInteger())
+							.paragraph(ReportParagraph.builder()
+									.horizontalAlignment(ParagraphAlignment.CENTER)
+									.spacingAfter(0)
+									.run(ReportParagraphRun.builder()
+											.text(masterWork.getTitle())
+											.build())
+									.build())
+							.build())
+					.cell(ReportTableCell.builder()
+							.align(XWPFTableCell.XWPFVertAlign.CENTER)
+							.width(BigDecimal.valueOf(2 * 1440).toBigInteger())
+							.paragraph(ReportParagraph.builder()
+									.horizontalAlignment(ParagraphAlignment.CENTER)
+									.spacingAfter(0)
+									.isWordWrapped(true)
+									.run(ReportParagraphRun.builder()
+											.text(masterWork.getDocumentNumber() == null
+													? ""
+													: masterWork.getDocumentNumber().toString())
+											.build())
+									.build())
+							.build())
+					.cell(ReportTableCell.builder()
+							.align(XWPFTableCell.XWPFVertAlign.CENTER)
+							.width(BigDecimal.valueOf(2 * 1440).toBigInteger())
+							.paragraph(ReportParagraph.builder()
+									.horizontalAlignment(ParagraphAlignment.CENTER)
+									.spacingAfter(0)
+									.isWordWrapped(true)
+									.run(ReportParagraphRun.builder()
+											.text(masterWork.getSlideNumber() == null
+													? ""
+													: masterWork.getSlideNumber().toString())
+											.build())
+									.build())
+							.build())
+					.build();
+
+			rows.add(row);
+		}
+
+		return rows;
+	}
+
+
+	private ReportTableRow createCourseHeaderRow() {
+		return ReportTableRow.builder()
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(1.25 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.isAddBreak(true)
+										.text("№")
+										.build())
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.text("З/П")
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(6.25 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.text("ПІБ студента")
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(8 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.text("Тема курсової роботи(проекту)")
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(2.5 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.isWordWrapped(true)
+								.run(ReportParagraphRun.builder()
+										.isBold(true)
+										.text("Розрахунково-пояснювальна записка, стр.")
+										.build())
+								.build())
+						.build())
+				.build();
+	}
+
+	private ReportTableRow createCourseRow(int index, QualificationWork work) {
+		return ReportTableRow.builder()
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(1.25 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.run(ReportParagraphRun.builder()
+										.text(Integer.toString(index))
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(6.25 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.run(ReportParagraphRun.builder()
+										.text(work.getStudentFullName())
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(8 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.run(ReportParagraphRun.builder()
+										.text(work.getTitle())
+										.build())
+								.build())
+						.build())
+				.cell(ReportTableCell.builder()
+						.align(XWPFTableCell.XWPFVertAlign.CENTER)
+						.width(BigDecimal.valueOf(2.5 * 1440).toBigInteger())
+						.paragraph(ReportParagraph.builder()
+								.horizontalAlignment(ParagraphAlignment.CENTER)
+								.spacingAfter(0)
+								.isWordWrapped(true)
+								.run(ReportParagraphRun.builder()
+										.text(work.getDocumentNumber() == null ? "" : work.getDocumentNumber() + "")
+										.build())
+								.build())
+						.build())
+				.build();
 	}
 }

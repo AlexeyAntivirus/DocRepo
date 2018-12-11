@@ -11,6 +11,7 @@ import com.revex.docrepo.exchange.works.DeleteQualificationWorkByIdRequestPayloa
 import com.revex.docrepo.exchange.works.DeleteQualificationWorkByIdResponsePayload;
 import com.revex.docrepo.exchange.works.FindAllQualificationWorksByAcademicYearAndWorkTypeRequestPayload;
 import com.revex.docrepo.exchange.works.FindAllQualificationWorksByAcademicYearAndWorkTypeResponsePayload;
+import com.revex.docrepo.exchange.works.GenerateReportRequestPayload;
 import com.revex.docrepo.exchange.works.GetAllCourseWorksResponsePayload;
 import com.revex.docrepo.exchange.works.GetAllDiplomaWorksResponsePayload;
 import com.revex.docrepo.exchange.works.InsertNewQualificationWorkRequestPayload;
@@ -20,6 +21,15 @@ import com.revex.docrepo.exchange.works.UpdateQualificationWorkRequestPayload;
 import com.revex.docrepo.exchange.works.UpdateQualificationWorkResponsePayload;
 import com.revex.docrepo.utils.DocumentType;
 import com.revex.docrepo.utils.UploadFileOptions;
+import com.revex.docrepo.utils.report.Report;
+import com.revex.docrepo.utils.report.ReportConstructor;
+import com.revex.docrepo.utils.report.ReportDocumentStyle;
+import com.revex.docrepo.utils.report.ReportParagraph;
+import com.revex.docrepo.utils.report.ReportParagraphRun;
+import com.revex.docrepo.utils.report.ReportTable;
+import com.revex.docrepo.utils.report.ReportTableCell;
+import com.revex.docrepo.utils.report.ReportTableRow;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
@@ -30,6 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileOutputStream;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,6 +49,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -468,64 +481,92 @@ public class QualificationWorkService {
 		return filePath.iterator().next();
 	}
 
-	public void generateReport(String educationProgram,
-	                           QualificationWorkType type,
-	                           int beginYear,
-	                           int endYear,
-	                           HttpServletResponse response) {
-		Set<QualificationWork> bachelor = parameterJdbcTemplate.query(
+	public void generateReport(GenerateReportRequestPayload payload, HttpServletResponse response) {
+		if (QualificationWorkType.DIPLOMA_WORK == payload.getWorkType()) {
+			this.generateReportForDiplomaWorks(payload.getEducationProgram(), payload.getBeginYear(), payload.getEndYear(), response);
+		} else {
+			this.generateReportForCourseWorks(payload.getEducationProgram(), payload.getBeginYear(), payload.getEndYear(), response);
+		}
+	}
+
+	private void generateReportForDiplomaWorks(String educationProgram,
+	                                          int beginYear,
+	                                          int endYear,
+	                                          HttpServletResponse response) {
+
+		String sql =
 				"SELECT kd.id, kd.rik1, kd.rik2, kd.sem, predm.id AS disciplineId, predm.nazva AS disciplineName, " +
-						"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId, " +
-						"       groups.nazva AS groupName, prep.id AS teacherId, " +
-						"       kd.tema, kd.kd, kd.papka, kd.ocenka, kd.spec, kd.okr, kd.op, kd.groupn, kd.kurs, " +
-						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker, kd.pagenum, kd.slidenum " +
-						"FROM kd " +
-						"LEFT OUTER JOIN kerivniki ON kerivniki.idrab = kd.id " +
-						"LEFT OUTER JOIN prep ON kerivniki.idprep = prep.id " +
-						"LEFT OUTER JOIN predm ON kd.predmid = predm.id " +
-						"LEFT OUTER JOIN stud ON stud.id = kd.studid " +
-						"LEFT OUTER JOIN sg ON stud.id = sg.idstud " +
-						"LEFT OUTER JOIN groups ON sg.idgroup = groups.id " +
-						"WHERE kd.op ~ :educationProgram " +
-						"AND kd.okr = 'бакалавр' " +
-						"AND kd.kd = :workType " +
-						"AND kd.rik1 BETWEEN :beginYear AND :endYear " +
-						"AND kd.rik2 BETWEEN :beginYear AND :endYear;",
+				"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId, " +
+				"       groups.nazva AS groupName, prep.id AS teacherId, " +
+				"       kd.tema, kd.kd, kd.papka, kd.ocenka, kd.spec, kd.okr, kd.op, kd.groupn, kd.kurs, " +
+				"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker, kd.pagenum, kd.slidenum " +
+				"FROM kd " +
+				"LEFT OUTER JOIN kerivniki ON kerivniki.idrab = kd.id " +
+				"LEFT OUTER JOIN prep ON kerivniki.idprep = prep.id " +
+				"LEFT OUTER JOIN predm ON kd.predmid = predm.id " +
+				"LEFT OUTER JOIN stud ON stud.id = kd.studid " +
+				"LEFT OUTER JOIN sg ON stud.id = sg.idstud " +
+				"LEFT OUTER JOIN groups ON sg.idgroup = groups.id " +
+				"WHERE kd.op ~ :educationProgram " +
+				"AND kd.kd = :workType " +
+				"AND kd.okr = :educationLevel " +
+				"AND kd.rik1 BETWEEN :beginYear AND :endYear " +
+				"AND kd.rik2 BETWEEN :beginYear AND :endYear;";
+
+		Set<QualificationWork> bachelor = parameterJdbcTemplate.query(sql,
 				new MapSqlParameterSource()
+						.addValue("workType", QualificationWorkType.DIPLOMA_WORK.getNumber())
+						.addValue("educationLevel", "бакалавр")
 						.addValue("educationProgram", educationProgram)
 						.addValue("beginYear", beginYear)
-						.addValue("endYear", endYear)
-						.addValue("workType", type.getNumber()),
+						.addValue("endYear", endYear),
 				mapper
 		);
 
-		Set<QualificationWork> master = parameterJdbcTemplate.query(
-				"SELECT kd.id, kd.rik1, kd.rik2, kd.sem, predm.id AS disciplineId, predm.nazva AS disciplineName, " +
-						"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId, " +
-						"       groups.nazva AS groupName, prep.id AS teacherId, " +
-						"       kd.tema, kd.kd, kd.papka, kd.ocenka, kd.spec, kd.okr, kd.op, kd.groupn, kd.kurs, " +
-						"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker, kd.pagenum, kd.slidenum " +
-						"FROM kd " +
-						"LEFT OUTER JOIN kerivniki ON kerivniki.idrab = kd.id " +
-						"LEFT OUTER JOIN prep ON kerivniki.idprep = prep.id " +
-						"LEFT OUTER JOIN predm ON kd.predmid = predm.id " +
-						"LEFT OUTER JOIN stud ON stud.id = kd.studid " +
-						"LEFT OUTER JOIN sg ON stud.id = sg.idstud " +
-						"LEFT OUTER JOIN groups ON sg.idgroup = groups.id " +
-						"WHERE kd.op ~ :educationProgram " +
-						"AND kd.okr = 'магістр' " +
-						"AND kd.kd = :workType " +
-						"AND kd.rik1 BETWEEN :beginYear AND :endYear " +
-						"AND kd.rik2 BETWEEN :beginYear AND :endYear;",
+		Set<QualificationWork> master = parameterJdbcTemplate.query(sql,
 				new MapSqlParameterSource()
+						.addValue("workType", QualificationWorkType.DIPLOMA_WORK.getNumber())
+						.addValue("educationLevel", "магістр")
 						.addValue("educationProgram", educationProgram)
 						.addValue("beginYear", beginYear)
-						.addValue("endYear", endYear)
-						.addValue("workType", type.getNumber()),
+						.addValue("endYear", endYear),
 				mapper
 		);
 
-		this.reportService.generateReport(educationProgram, beginYear, endYear, type, bachelor, master, response);
+		this.reportService.generateReportForDiplomaWorks(educationProgram, beginYear, endYear, bachelor, master, response);
+	}
+
+	private void generateReportForCourseWorks(String educationProgram,
+	                                           int beginYear,
+	                                           int endYear,
+	                                           HttpServletResponse response) {
+		String sql = "SELECT kd.id, kd.rik1, kd.rik2, kd.sem, predm.id AS disciplineId, predm.nazva AS disciplineName,  \n" +
+				"       stud.id AS studentId, stud.pib AS studentFullName, groups.id AS groupId,  \n" +
+				"       groups.nazva AS groupName, prep.id AS teacherId,  \n" +
+				"       kd.tema, kd.kd, kd.papka, kd.ocenka, kd.spec, kd.okr, kd.op, kd.groupn, kd.kurs,  \n" +
+				"       kd.fak, kd.galuz, kd.skor, kd.zao, kd.pib, kd.ocenkagos, kd.ocenkaects, kd.ker, kd.pagenum, kd.slidenum  \n" +
+				"FROM kd  \n" +
+				"LEFT OUTER JOIN kerivniki ON kerivniki.idrab = kd.id  \n" +
+				"LEFT OUTER JOIN prep ON kerivniki.idprep = prep.id  \n" +
+				"LEFT OUTER JOIN predm ON kd.predmid = predm.id  \n" +
+				"LEFT OUTER JOIN stud ON stud.id = kd.studid  \n" +
+				"LEFT OUTER JOIN sg ON stud.id = sg.idstud  \n" +
+				"LEFT OUTER JOIN groups ON sg.idgroup = groups.id  \n" +
+				"WHERE kd.op ~ :educationProgram\n" +
+				"AND kd.kd = :workType\n" +
+				"AND kd.rik1 BETWEEN :beginYear AND :endYear  \n" +
+				"AND kd.rik2 BETWEEN :beginYear AND :endYear\n" +
+				"ORDER BY disciplineId, groupId;";
+		Set<QualificationWork> master = parameterJdbcTemplate.query(sql,
+				new MapSqlParameterSource()
+						.addValue("workType", QualificationWorkType.COURSE_WORK.getNumber())
+						.addValue("educationProgram", educationProgram)
+						.addValue("beginYear", beginYear)
+						.addValue("endYear", endYear),
+				mapper
+		);
+
+		this.reportService.generateReportForCourseWorks(educationProgram, master, response);
 	}
 
 	private UploadFileOptions generateOptions(int beginYear,

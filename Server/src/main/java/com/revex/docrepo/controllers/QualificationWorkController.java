@@ -105,11 +105,6 @@ public class QualificationWorkController {
 
 	@PostMapping("/report")
 	public void generateReport(@RequestBody GenerateReportRequestPayload payload, HttpServletResponse response) {
-		this.service.generateReport(
-				payload.getEducationProgram(),
-				payload.getWorkType(),
-				payload.getBeginYear(),
-				payload.getEndYear(),
-				response);
+		this.service.generateReport(payload, response);
 	}
 }

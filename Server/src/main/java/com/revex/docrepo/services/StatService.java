@@ -6,6 +6,7 @@ import com.revex.docrepo.exchange.stat.StatResponsePayload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,6 +21,7 @@ public class StatService {
 		this.mapper = mapper;
 	}
 
+	@Secured("ROLE_ADMIN")
 	public StatResponsePayload getStat(StatRequestPayload payload) {
 		return template.queryForObject(
 				"SELECT * FROM get_stat(:beginYear, :endYear, :workType, :cathedra, :faculty, :specialty, :teacherId)",
