@@ -1,6 +1,6 @@
 <template>
 	<el-card shadow="never">
-		<el-form>
+		<el-form :model="value">
 			<el-form-item size="small" prop="name" label="Назва: ">
 				<el-input size="small" v-model="value.name"/>
 			</el-form-item>

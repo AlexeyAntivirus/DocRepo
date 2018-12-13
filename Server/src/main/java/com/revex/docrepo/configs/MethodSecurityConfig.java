@@ -8,3 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Globa
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
 }
+
+//public class MethodSecurityConfig {
+//
+//}

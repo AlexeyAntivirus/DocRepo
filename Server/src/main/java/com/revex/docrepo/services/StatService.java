@@ -21,7 +21,6 @@ public class StatService {
 		this.mapper = mapper;
 	}
 
-	@Secured("ROLE_ADMIN")
 	public StatResponsePayload getStat(StatRequestPayload payload) {
 		return template.queryForObject(
 				"SELECT * FROM get_stat(:beginYear, :endYear, :workType, :cathedra, :faculty, :specialty, :teacherId)",

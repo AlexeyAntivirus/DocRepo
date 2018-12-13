@@ -436,7 +436,6 @@
 			const target = a.target as HTMLInputElement
 
 			for (const file of target.files) {
-				console.log(file.type)
 				if (file.type !== "application/msword" &&
 					file.type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
 

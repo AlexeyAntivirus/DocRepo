@@ -7,7 +7,7 @@ export interface GlobalConfig {
 }
 
 export const globalConfig: GlobalConfig = {
-    serverUrl: process.env.NODE_ENV === "production" ? "/docrepo/" : "http://localhost:9216/docrepo/",
+    serverUrl: "/docrepo/",
 	isInternetExplorer: window.navigator.userAgent.indexOf("MSIE ") > 0
 }
 

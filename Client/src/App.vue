@@ -7,6 +7,9 @@
 			<div class="header__text">
 				<span>DocRepo</span>
 			</div>
+			<div class="header__logout">
+				<el-button type="danger" @click="logout">Вихід</el-button>
+			</div>
 		</el-header>
 		<el-container>
 			<app-menu/>
@@ -21,7 +24,7 @@
 	import {Component} from "vue-property-decorator"
 	import Vue from "vue"
 	import AppMenu from "@/components/AppMenu.vue"
-	import {WindowSize} from "./plugins/window"
+	import auth from "@/auth"
 	const logoImg = require("@/assets/logo.png")
 
 	@Component({
@@ -33,6 +36,26 @@
 	export default class App extends Vue {
 		private readonly logoImg = logoImg
 
+		private logout() {
+			this.$confirm("Ви впевнені, що бажаєте вийти з системи?", "Помилка", {
+				confirmButtonText: "Так",
+				cancelButtonText: "Ні",
+				type: "warning"
+			}).then(value => {
+				const result = value as any
+				if (result === "confirm" || result.action === "confirm") {
+					this.$axios.post("/logout").then(value1 => {
+						auth.isAuthenticated = false
+						this.$router.push("/login")
+					}).catch(reason => {
+						this.$alert("З'явилася якась помилка.\n" + reason, "Помилка", {
+							type: "error",
+							confirmButtonText: "OK",
+						})
+					})
+				}
+			})
+		}
 	}
 </script>
 
@@ -55,6 +78,11 @@
 				font-size: 28px;
 				color: white;
 			}
+		}
+		&__logout {
+
+			line-height: 56px;
+			float: right;
 		}
 	}
 </style>
